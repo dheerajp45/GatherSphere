@@ -3,6 +3,12 @@ import { PORT } from "./config/env.js";
 import {connectDB} from "./config/db.js"
 const app = express();
 
+import { authRouter } from "./routes/auth.js";
+import { eventRouter} from "./routes/event.js";
+app.use(express.json());
+app.use("/api/auth",authRouter)
+app.use("/event",eventRouter)
+
 app.get("/",(req,res)=>{
 res.send("hi hello server started")
 })
