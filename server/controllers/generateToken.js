@@ -6,7 +6,7 @@ function generateToken(user){
         id:user._id.toString(),
         name:user.name,
         email:user.email
-    },JWT_SECRET,{expiresIn:"1d"})
+    },JWT_SECRET,{expiresIn:"7d"})
     return signed_data; 
 }
 export {generateToken}
