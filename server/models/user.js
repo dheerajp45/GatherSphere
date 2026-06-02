@@ -32,7 +32,7 @@ const userSchema = new Schema({
 
 })
 
-userSchema.pre("save", async function (next){
+userSchema.pre("save", async function (){
     if(!this.isModified("password")){
         return;
     }
@@ -45,9 +45,7 @@ userSchema.methods.comparePassword= async function (inputPassword) {
         return result;
 };
 
-// const purchaseSchema = new Schema({
-//     userId: ObjectId,
-//     courseId: ObjectId,
+
 
 // });
 const User = mongoose.model('User', userSchema);
