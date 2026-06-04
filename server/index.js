@@ -9,7 +9,7 @@ import { dashboardRouter } from "./routes/dashboard.js";
 app.use(express.json());
 app.use("/api/auth",authRouter)
 app.use("/api/events",eventRouter)
-app.use("api/dashboard",dashboardRouter)
+app.use("/api/dashboard",dashboardRouter)
 app.get("/",(req,res)=>{
 res.send("hi hello server started")
 })
