@@ -12,4 +12,11 @@ async function userCreate(data){
     };
 }
 
-export {userCreate}
+function formatAuthUser(user){
+return {id:user._id,
+    name:user.name,
+    email:user.email
+}
+}
+
+export {userCreate,formatAuthUser}

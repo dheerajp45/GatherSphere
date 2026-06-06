@@ -2,7 +2,7 @@ import express from "express";
 const authRouter = express.Router();
 import { registerSchema } from "../validators/authValidator.js";
 import { loginSchema } from "../validators/authValidator.js";
-import { userCreate } from "../controllers/authController.js";
+import { userCreate,formatAuthUser } from "../controllers/authController.js";
 import { User } from "../models/user.js";
 import { generateToken } from "../controllers/generateToken.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
@@ -25,11 +25,8 @@ authRouter.post("/register", async function (req, res) {
         const userData = await userCreate(registerResult.data);
         return res.status(201).json({
             message: "new user registered",
-            data: {
-                name: userData.user.name,
-                email: userData.user.email,
-                token: userData.token
-            }
+            token:userData.token,
+            user:formatAuthUser(userData.user),
         })
     } catch (error) {
 
@@ -74,20 +71,18 @@ authRouter.post("/login", async function (req, res) {
     }
     else{
         const token = generateToken(loggedUser)
-        const user ={id:loggedUser._id,
-            name:loggedUser.name,
-            email:loggedUser.email
-        }
+
         return res.status(200).json({message:"login done",
             token:token,
-            user:user
+            user:formatAuthUser(loggedUser)
         })
     }
 
 })
 authRouter.get("/me",authMiddleware,(req,res)=>{
-console.log(req.headers.authorization);
-return res.json({message:"this is your page"})
+return res.json({message:"this is your page..success",
+    user:req.user
+})
 })
 
 

@@ -1,7 +1,9 @@
+import cors from "cors"
 import express from "express"
 import { PORT } from "./config/env.js";
 import {connectDB} from "./config/db.js"
 const app = express();
+app.use(cors({origin:"http://localhost:5173"}))
 
 import { authRouter } from "./routes/auth.js";
 import { eventRouter} from "./routes/events.js";
