@@ -31,13 +31,13 @@ function LoginPage(){
     return (<>
      <div className="bg-black text-white h-screen flex justify-center items-center">
       <h1 className="text-5xl font-bold">
-      {/* GatherSphere login Page */}
+      GatherSphere login Page
       </h1>
       <form onSubmit={handleSubmit}>
                 <input type="email" value={email} onChange={(e)=>setEmail(e.target.value)}placeholder="enter email"></input>
                 <input type="password" value={password}  onChange={(e)=>setPassword(e.target.value)}placeholder="enter pwd"></input>
                 {error && <p className="text-red-500">{error}</p>}
-                <button type="submit" disabled={loading}></button> <br />
+                <button type="submit" disabled={loading}>LOGIN!!</button> <br />
                 {loading?<p className="text-blue-700">logging in!!</p>: <p className="text-blue-700">submit</p>}
                 {user && <p>hi - {user.name}</p>}
                 <Link to="/register">Dont have an account?</Link>

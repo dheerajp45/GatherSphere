@@ -38,7 +38,6 @@ eventRouter.post("/",authMiddleware,async function (req,res) {
         })
     }
 })
-
 eventRouter.get("/",async function (req,res) {
     try {
         const events = await getAllEvents();
@@ -50,7 +49,9 @@ eventRouter.get("/",async function (req,res) {
     } catch (error) {
         return res.status(500).json({
             message:"server error"
-    })}})
+    })}
+})
+
 eventRouter.get("/my/events",authMiddleware,async function (req,res) {
     const hostId = req.user.id
     const hostName=req.user.name;
@@ -87,8 +88,6 @@ eventRouter.get("/:slug",async function (req,res) {
     })
     }
 })
-
-
 eventRouter.put("/:id",authMiddleware,async function (req,res) {
     const hostId= req.user.id;
     const eventId = req.params.id;
