@@ -15,12 +15,12 @@ function App() {
 
   return (<div>
     <BrowserRouter>
-    <Navbar>
+    <Navbar />
 <Routes>
   <Route path="/" element={<Home></Home>}></Route>
   <Route path='/login' element={<LoginPage></LoginPage>}></Route>
   <Route path='/register' element={<RegisterPage></RegisterPage>}></Route>
-  <Route path='/eventlisting/' element={<EventListingPage></EventListingPage>}></Route>
+  <Route path='/eventlisting' element={<EventListingPage></EventListingPage>}></Route>
 
 
   <Route path='/dashboard/' element={
@@ -46,7 +46,7 @@ function App() {
     }></Route>
 
 </Routes>
-</Navbar>
+
 </BrowserRouter>
   </div>
     

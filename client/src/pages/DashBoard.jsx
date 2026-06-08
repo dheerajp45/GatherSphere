@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useState } from "react"
 import api from "../api/axios.js"
+import { useNavigate } from "react-router-dom";
 
 
 function DashBoard() {
@@ -8,12 +9,14 @@ function DashBoard() {
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
-    useEffect(() => {
+    let navigate = useNavigate();
+
+    async function fetchData() {
         setLoading(true);
         setEvents([]);
         setStats(null)
         setError("");
-        (async () => {
+        (async  ()=> {
             try {
                 const statsRes = await api.get(`/api/dashboard/stats`);
                 const eventsRes = await api.get(`/api/events/my/events`)
@@ -26,7 +29,26 @@ function DashBoard() {
                 setLoading(false)
             }
         })();
+    }
+    useEffect(() => {
+        fetchData();
     }, [])
+
+    function editRedirect(id){
+      
+        navigate(`/events/edit/${id}`)
+    
+    }
+    async function statuschange(id){
+        await api.patch(`/api/events/${id}/status`, {
+            "status": "published"
+        }); 
+        await fetchData();
+    }
+    async function deleteEvent(id){
+        await api.delete(`/api/events/${id}`)
+        await fetchData();
+    }
     return <>
         dashboard page
         {loading ? <p className="text-blue-700">getting the data</p>
@@ -40,8 +62,16 @@ function DashBoard() {
                         events.length===0? <p className="text-green-700">No events Found</p>
                         :<ul className="list-disc list-inside space-y-2 text-grey">
                         {events.map((event) => (
-                            <li key={event._id}> {event.title}</li>
-                        ))}</ul>
+                            <li key={event._id}> {event.title}  ---------  
+                            <button onClick={()=>editRedirect(event._id)}>
+                                edit the event
+                                </button>------ 
+                                {event.status} 
+                                {event.status==="draft"&&<>------<button onClick={()=>statuschange(event._id)}>status change</button></>}-------
+                                <><button onClick={()=>deleteEvent(event._id)}>delete</button></>
+                                </li> 
+                        ))}
+                        </ul>
                     }
                 </div>
 

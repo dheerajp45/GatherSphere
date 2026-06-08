@@ -8,15 +8,20 @@ function Navbar({children}){
     let navigate = useNavigate();
 function handleLogOut(){
     logout();
-    navigate("/login");
+    navigate("/")
 }
 
     return<>
-    {children}
-    <h1>GatherSphere</h1>
-    <button onClick={handleLogOut}>logout</button>
+    <h1><Link to={"/dashboard"}>GatherSphere</Link></h1>
+    {token? <>
+        <button onClick={handleLogOut}>logout</button>
+        <Link to={"/eventlisting"}>event listings</Link>
 
-    {!token && !user &&     navigate("/login")}
+    </>
+
+    : <Link to={"/"}>register/login</Link>}
+    {children}
+
     </>
 }
 export default Navbar
