@@ -1,115 +1,117 @@
 import express from "express";
 const eventRouter = express.Router();
-import { authMiddleware } from "../middlewares/authMiddleware.js";
-import { createEventSchema,updateStatusSchema } from "../validators/eventValidator.js";
-import {createEvent,getAllEvents,getAllEventsByUser,getEventBySlug,isValidObjectId,eventHostValidation,eventUpdate,deleteEvent,publishEvent} from "../controllers/eventController.js"
+import {Event} from "../models/event.js"
+import {Registration} from "../models/registration.js"
+import { authMiddleware , optionalAuth} from "../middlewares/authMiddleware.js";
+import { createEventSchema, updateStatusSchema } from "../validators/eventValidator.js";
+import { registerForEventSchema } from "../validators/registrationValidator.js"
+import { createEvent, getAllEvents, getAllEventsByUser, getEventBySlug, isValidObjectId, eventHostValidation, eventUpdate, deleteEvent, publishEvent } from "../controllers/eventController.js"
 
-
-
-eventRouter.post("/",authMiddleware,async function (req,res) {
+eventRouter.post("/", authMiddleware, async function (req, res) {
     const eventCreateResult = createEventSchema.safeParse(req.body)
+    
     const hostId = req.user.id
     const hostName = req.user.name;
-    const hostEmail =  req.user.email;
-    
-    if(!eventCreateResult.success){
+    const hostEmail = req.user.email;
+
+    if (!eventCreateResult.success) {
         return res.status(400).json({
-            message:"event validation failed",
-            errors:eventCreateResult.error.issues
+            message: "event validation failed",
+            errors: eventCreateResult.error.issues
         })
     }
     try {
-    const regsiteredEvent = await createEvent(eventCreateResult.data,hostId,hostName,hostEmail)
-    return res.status(201).json({
-        message:regsiteredEvent.message,
-        eventName:regsiteredEvent.eventName,
-        hostName:hostName,
-        hostEmail:hostEmail
-    })
-        
+        const regsiteredEvent = await createEvent(eventCreateResult.data, hostId, hostName, hostEmail)
+        return res.status(201).json({
+            message: regsiteredEvent.message,
+            eventName: regsiteredEvent.eventName,
+            hostName: hostName,
+            hostEmail: hostEmail
+        })
+
     } catch (error) {
-        if(error.code ===11000){
+        if (error.code === 11000) {
             return res.status(400).json({
-                message:"this event already exists"
+                message: "this event already exists"
             })
         }
         return res.status(500).json({
-            message:"server error"
+            message: "server error"
         })
     }
 })
-eventRouter.get("/",async function (req,res) {
+eventRouter.get("/", async function (req, res) {
     try {
         const events = await getAllEvents();
-        
-        return res.status(200).json({
-            message:"event details fetched",
-            eventdetails:events
-        })
-    } catch (error) {
-        return res.status(500).json({
-            message:"server error"
-    })}
-})
 
-eventRouter.get("/my/events",authMiddleware,async function (req,res) {
-    const hostId = req.user.id
-    const hostName=req.user.name;
-    try {
-        const eventsByUser =await  getAllEventsByUser(hostId);
         return res.status(200).json({
-            message:"event details of a user fetched",
-            createdBy:hostName,
-            eventdetails:eventsByUser,
+            message: "event details fetched",
+            eventdetails: events
         })
     } catch (error) {
         return res.status(500).json({
-            message:"server error"
-    })
+            message: "server error"
+        })
+    }
+})
+eventRouter.get("/my/events", authMiddleware, async function (req, res) {
+    const hostId = req.user.id
+    const hostName = req.user.name;
+    try {
+        const eventsByUser = await getAllEventsByUser(hostId);
+        return res.status(200).json({
+            message: "event details of a user fetched",
+            createdBy: hostName,
+            eventdetails: eventsByUser,
+        })
+    } catch (error) {
+        return res.status(500).json({
+            message: "server error"
+        })
     }
 
 })
-eventRouter.get("/:slug",async function (req,res) {
+eventRouter.get("/:slug", async function (req, res) {
     const req_slug = req.params.slug;
     try {
         const req_slug_event = await getEventBySlug(req_slug);
-        if(!req_slug_event){
+        if (!req_slug_event) {
             return res.status(404).json({
-                message:"event not found"
+                message: "event not found"
             })
         }
         return res.status(200).json({
-            message:"found the event with the requested slug",
-            req_slug_event:req_slug_event
+            message: "found the event with the requested slug",
+            req_slug_event: req_slug_event
         })
     } catch (error) {
         return res.status(500).json({
-            message:"server error"
-    })
+            message: "server error"
+        })
     }
 })
-eventRouter.put("/:id",authMiddleware,async function (req,res) {
-    const hostId= req.user.id;
+eventRouter.put("/:id", authMiddleware, async function (req, res) {
+    const hostId = req.user.id;
     const eventId = req.params.id;
     try {
-        if(!isValidObjectId(eventId)){
-            return res.status(400).json({message:"invalid event id"})
+        if (!isValidObjectId(eventId)) {
+            return res.status(400).json({ message: "invalid event id" })
         }
-       else{
+        else {
             const updatedData = createEventSchema.safeParse(req.body);
-        
+
             if (!updatedData.success) {
-              return res.status(400).json({
-                message: "event validation failed",
-                errors: updatedData.error.issues,
-              });
+                return res.status(400).json({
+                    message: "event validation failed",
+                    errors: updatedData.error.issues,
+                });
             }
-            const isHost = await eventHostValidation(hostId,eventId)
-            if(isHost.ok===false){
+            const isHost = await eventHostValidation(hostId, eventId)
+            if (isHost.ok === false) {
                 return res.status(403).json({ message: "Not authorized" });
             }
-            else{
-                const updated = await eventUpdate(updatedData.data,eventId)
+            else {
+                const updated = await eventUpdate(updatedData.data, eventId)
                 return res.status(200).json({
                     message: updated.message
                 })
@@ -117,72 +119,161 @@ eventRouter.put("/:id",authMiddleware,async function (req,res) {
         }
     } catch (error) {
         return res.status(500).json({
-            message:"server error"
-    })
+            message: "server error"
+        })
     }
 
-   
 
 
 
 
-    
+
+
 })
-eventRouter.delete("/:id",authMiddleware,async function (req,res) {
+eventRouter.delete("/:id", authMiddleware, async function (req, res) {
     const hostId = req.user.id;
     const eventId = req.params.id;
     try {
-        if(!isValidObjectId(eventId)){
-            return res.status(400).json({message:"invalid event id"})
+        if (!isValidObjectId(eventId)) {
+            return res.status(400).json({ message: "invalid event id" })
         }
-        else{
-            const isHost =  await eventHostValidation(hostId,eventId);
-            if(isHost.ok===false){
+        else {
+            const isHost = await eventHostValidation(hostId, eventId);
+            if (isHost.ok === false) {
                 return res.status(403).json({ message: "Not authorized" });
             }
-            else{
+            else {
                 const deleted = await deleteEvent(eventId);
-                return res.status(200).json({message: "Event deleted"})
+                return res.status(200).json({ message: "Event deleted" })
             }
         }
     } catch (error) {
         return res.status(500).json({
-            message:"server error"
-    })
+            message: "server error"
+        })
     }
 
 })
-eventRouter.patch("/:id/status",authMiddleware,async function (req,res) {
+eventRouter.patch("/:id/status", authMiddleware, async function (req, res) {
     const hostId = req.user.id;
     const eventId = req.params.id;
-   
+
     const result = updateStatusSchema.safeParse(req.body)
     if (!result.success) {
         return res.status(400).json({
-          message: "validation failed",
-          errors: result.error.issues,
+            message: "validation failed",
+            errors: result.error.issues,
         });
-      }
-    const status =  result.data.status;
+    }
+    const status = result.data.status;
 
     try {
-        if(!isValidObjectId(eventId)){
-            return res.status(404).json({message:"invalid event id"})
+        if (!isValidObjectId(eventId)) {
+            return res.status(404).json({ message: "invalid event id" })
         }
-        else{
-            const isHost =  await eventHostValidation(hostId,eventId);
-            if(isHost.ok===false){
+        else {
+            const isHost = await eventHostValidation(hostId, eventId);
+            if (isHost.ok === false) {
                 return res.status(403).json({ message: "Not authorized" });
             }
-            else{
-                const publishDone = await publishEvent(eventId,status);
-                return res.status(200).json({message:"event published"})
+            else {
+                const publishDone = await publishEvent(eventId, status);
+                return res.status(200).json({ message: "event published" })
             }
         }
     } catch (error) {
         return res.status(500).json({
-            message:"server error"
-    })
+            message: "server error"
+        })
     }
 })
-export{eventRouter}
+eventRouter.post("/:id/register",optionalAuth, async function (req, res) {
+    const registerEventResult = registerForEventSchema.safeParse(req.body);
+    const eventId = req.params.id;
+
+    let userId = null
+    if(req.user){
+         userId=req.user.id
+     
+    }
+    if (!registerEventResult.success) {
+        return res.status(400).json({
+            message: "event register validation failed",
+            errors: registerEventResult.error.issues
+        })
+    }
+    const result = registerEventResult.data
+
+    try {
+        if (!isValidObjectId(eventId)) {
+            return res.status(400).json({ message: "invalid event id" })
+        }
+
+        const event = await Event.findById(eventId)
+        if (!event) {
+            return res.status(404).json({ message: "event not found" })
+        }
+        if (event.status !== "published") {
+            return res.status(400).json({ message: "registration not open" })
+        }
+
+        if (event.registrationDeadline) {
+            if(new Date() > event.registrationDeadline){
+                return res.status(400).json({ message: "registrations closed" })
+            }
+        }
+        const existingRegistration = await  Registration.findOne({event:eventId,
+            email:result.email})
+        if(existingRegistration){
+            return res.status(400).json({message:"event already registered"})
+        }
+
+        let status =""
+        const seatsTaken = await Registration.countDocuments({
+            event:eventId,
+            status:{$in: ["approved","pending"]}
+        })
+        if (seatsTaken>=event.capacity){
+             status = "waitlisted"
+        }
+        else if(event.registrationMode==="auto"){
+             status = "approved"
+        }
+        else{
+             status = "pending"
+        }
+        const registrationData = {
+            event : eventId,
+            name:result.name,
+            email:result.email,
+            phone:result.phone,
+            organization:result.organization,
+            status:status
+        }
+        if(userId){
+            registrationData.userId= userId;
+        }
+        const newRegistration = await Registration.create(registrationData);
+        return res.status(201).json({
+            message:"registration successful",
+            status: newRegistration.status,
+            registrationId: newRegistration._id
+        })
+
+
+    } catch (error) {
+        if(error.code === 11000){
+            console.log(error);
+            
+            return res.status(400).json({
+                message:"already registered for this event"
+            })
+        }
+        console.log(error);
+        return res.status(500).json({
+            message:"server error"
+        })
+    }
+
+})
+export { eventRouter }

@@ -5,7 +5,6 @@ const registerSchema = z.object({
     .min(1,{message:"name is required"}),
     email: z
     .string()
-    // .nonempty("Required")
     .min(1, { message: "email is required" })
     .email({ message: "invalid email" }), 
     password:z

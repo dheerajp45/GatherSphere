@@ -8,6 +8,7 @@ app.use(cors({origin:"http://localhost:5173"}))
 import { authRouter } from "./routes/auth.js";
 import { eventRouter} from "./routes/events.js";
 import { dashboardRouter } from "./routes/dashboard.js";
+
 app.use(express.json());
 app.use("/api/auth",authRouter)
 app.use("/api/events",eventRouter)
