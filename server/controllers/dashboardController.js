@@ -1,5 +1,5 @@
 import { Event } from "../models/event.js";
-
+import { Registration } from "../models/registration.js";
 
 async function  eventHostedByUser(hostId){
     const events = await Event.find({host:hostId});
@@ -16,4 +16,20 @@ async function upcomingEvents(hostId){
     return events;
 }
 
-export {eventHostedByUser,upcomingEvents}
+async function  totalRegistrationsDone(hostId){
+    const events = await Event.find({
+        host : hostId
+    }).select('_id')
+    const eventIds = events.map(e=>e._id)
+    if(eventIds.length===0){
+        return 0;
+    }
+    const count = await Registration.countDocuments({
+        event:{$in:eventIds},
+        status:{$in:["approved", "pending","waitlisted","attended"]}
+    })
+    return count;
+}
+
+
+export {eventHostedByUser,upcomingEvents,totalRegistrationsDone}

@@ -1,4 +1,5 @@
 import { Event } from "../models/event.js";
+import {Registration} from "../models/registration.js";
 import mongoose from "mongoose";
 async function  createEvent(data,hostId){
     const event = await Event.create({
@@ -24,9 +25,13 @@ async function getAllEventsByUser(hostId){
 }
 
 async function getEventBySlug(req_slug) {
-    const req_slug_event =  await Event.findOne({slug:req_slug,status:"published"})
-    
-    return req_slug_event    
+    const eventData =  await Event.findOne({slug:req_slug,status:"published"})
+    if(!eventData){
+        return null;
+    }
+   const  seatsLeft =await  getSeatsLeft(eventData._id,eventData.capacity)
+    return {eventData:eventData ,
+        seatsLeft:seatsLeft}   
 }
 
 function isValidObjectId(id) {
@@ -58,4 +63,11 @@ async function publishEvent(eventId,status) {
     return {message :"published status updated  ",event}
     
 }
-export{createEvent,getAllEvents,getAllEventsByUser,getEventBySlug,isValidObjectId,eventHostValidation,eventUpdate,deleteEvent,publishEvent}
+async function getSeatsLeft(eventId,capacity){
+    const count = await Registration.countDocuments({
+        event:eventId,
+        status:"approved",
+    })
+    return Math.max(0, capacity - count);
+}
+export{createEvent,getAllEvents,getAllEventsByUser,getEventBySlug,isValidObjectId,eventHostValidation,eventUpdate,deleteEvent,publishEvent,getSeatsLeft}

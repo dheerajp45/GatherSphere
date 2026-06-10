@@ -5,5 +5,7 @@ const registerForEventSchema = z.object({
     phone: z.string().min(1, { message: "phone is required" }),
     organization: z.string().trim().optional(),
   })
-
-  export {registerForEventSchema}
+const registrationDeleteSchema = z.object({
+  email:z.string().min(1).email({message:"invalid email"}),
+})
+  export {registerForEventSchema,registrationDeleteSchema}
