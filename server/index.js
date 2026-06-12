@@ -8,11 +8,14 @@ app.use(cors({origin:"http://localhost:5173"}))
 import { authRouter } from "./routes/auth.js";
 import { eventRouter} from "./routes/events.js";
 import { dashboardRouter } from "./routes/dashboard.js";
+import { registrationRouter } from "./routes/registration.js";
 
 app.use(express.json());
 app.use("/api/auth",authRouter)
 app.use("/api/events",eventRouter)
 app.use("/api/dashboard",dashboardRouter)
+app.use("/api/registrations", registrationRouter);
+
 app.get("/",(req,res)=>{
 res.send("hi hello server started")
 })

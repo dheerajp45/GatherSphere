@@ -43,7 +43,7 @@ const registrationSchema = new Schema({
             "waitlisted",
             "cancelled",
             "attended",
-            "no_show"
+            "absent"
         ],
         default: "pending",
     },
