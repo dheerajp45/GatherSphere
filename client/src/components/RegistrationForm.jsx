@@ -23,7 +23,7 @@ function RegistrationForm({eventId}){
         setLoading(true)
         try{
             const payload = {...formData};
-            const res =  await api.post(`/api/events/${eventId}/register`,payload)
+            const res =  await api.post(`/api/registrations/events/${eventId}/register`,payload)
             if(res){
                 // navigate("/eventlisting")
                 setStatus(res.data.status)

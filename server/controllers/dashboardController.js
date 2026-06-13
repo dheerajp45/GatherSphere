@@ -26,7 +26,7 @@ async function  totalRegistrationsDone(hostId){
     }
     const count = await Registration.countDocuments({
         event:{$in:eventIds},
-        status:{$in:["approved", "pending","waitlisted","attended"]}
+        status:{$in:["approved", "pending","waitlisted",]}
     })
     return count;
 }

@@ -1,73 +1,95 @@
 import { Event } from "../models/event.js";
-import {Registration} from "../models/registration.js";
-import mongoose from "mongoose";
-async function  createEvent(data,hostId){
+import { Registration } from "../models/registration.js";
+import { isValidObjectId } from "../utils/isValidObjectId.js";
+import { eventHostValidation } from "../utils/eventHostValidation.js";
+import { closeUnresolvedRegistrations } from "./registrationController.js";
+
+async function createEvent(data, hostId) {
     const event = await Event.create({
         ...data,
-        host:hostId
-    }
-    )
-    return ({
-        message:"event created successfully",
-        eventName:event.title,
-    })
-
+        host: hostId,
+    });
+    return {
+        message: "event created successfully",
+        eventName: event.title,
+    };
 }
 
 async function getAllEvents() {
-    const events = await Event.find({status:"published"}).sort({date:1});
-    return events
+    const events = await Event.find({ status: "published" }).sort({ date: 1 });
+    return events;
 }
 
-async function getAllEventsByUser(hostId){
-    const events = await Event.find({host:hostId}).sort({date:1});
-    return events
+async function getAllEventsByUser(hostId) {
+    const events = await Event.find({ host: hostId }).sort({ date: 1 });
+    return events;
 }
 
 async function getEventBySlug(req_slug) {
-    const eventData =  await Event.findOne({slug:req_slug,status:"published"})
-    if(!eventData){
+    const eventData = await Event.findOne({ slug: req_slug, status: "published" });
+    if (!eventData) {
         return null;
     }
-   const  seatsLeft =await  getSeatsLeft(eventData._id,eventData.capacity)
-    return {eventData:eventData ,
-        seatsLeft:seatsLeft}   
+    const seatsLeft = await getSeatsLeft(eventData._id, eventData.capacity);
+    return { eventData, seatsLeft };
 }
 
-function isValidObjectId(id) {
-    return mongoose.Types.ObjectId.isValid(id);
-  }
-
-  async function eventHostValidation(hostId,eventId){
-    const event = await Event.findById(eventId)
-    if(!event) return {message:"event not found",ok:false}
-    if(event.host.toString()!==hostId){return {message:"not the actual host",ok:false}}
-    else return {ok:true} 
-  }
-  async function eventUpdate(updatedData,eventId) {
-    await Event.findByIdAndUpdate(eventId,{...updatedData},{
-        new:true,
-        runValidators:true
-    })    
+async function eventUpdate(updatedData, eventId) {
+    await Event.findByIdAndUpdate(eventId, { ...updatedData }, {
+        new: true,
+        runValidators: true,
+    });
     return {
-        message:"update done"
-    }
-  }
-async function deleteEvent(eventId){
-    await Event.findByIdAndDelete(eventId)
-    return {message:"Event Deleted"}
+        message: "update done",
+    };
 }
 
-async function publishEvent(eventId,status) {
-    const event = await Event.findByIdAndUpdate(eventId,{status},{new:true,runValidators:true}) 
-    return {message :"published status updated  ",event}
-    
+async function deleteEvent(eventId) {
+    await Event.findByIdAndDelete(eventId);
+    return { message: "Event Deleted" };
 }
-async function getSeatsLeft(eventId,capacity){
+
+async function publishEvent(eventId, status) {
+    const event = await Event.findByIdAndUpdate(eventId, { status }, { new: true, runValidators: true });
+    return { message: "published status updated  ", event };
+}
+
+async function getSeatsLeft(eventId, capacity) {
     const count = await Registration.countDocuments({
-        event:eventId,
-        status:"approved",
-    })
+        event: eventId,
+        status: "approved",
+    });
     return Math.max(0, capacity - count);
 }
-export{createEvent,getAllEvents,getAllEventsByUser,getEventBySlug,isValidObjectId,eventHostValidation,eventUpdate,deleteEvent,publishEvent,getSeatsLeft}
+
+async function updateEventStatus(hostId, eventId, status) {
+    if (!isValidObjectId(eventId)) {
+        return { ok: false, status: 404, message: "invalid event id" };
+    }
+
+    const isHost = await eventHostValidation(hostId, eventId);
+    if (!isHost.ok) {
+        return { ok: false, status: 403, message: "Not authorized" };
+    }
+
+    if (status === "registration_closed") {
+        await closeUnresolvedRegistrations(eventId);
+        await publishEvent(eventId, status);
+        return { ok: true, status: 200, message: "event registration_closed" };
+    }
+
+    await publishEvent(eventId, status);
+    return { ok: true, status: 200, message: "event published" };
+}
+
+export {
+    createEvent,
+    getAllEvents,
+    getAllEventsByUser,
+    getEventBySlug,
+    eventUpdate,
+    deleteEvent,
+    publishEvent,
+    getSeatsLeft,
+    updateEventStatus,
+};

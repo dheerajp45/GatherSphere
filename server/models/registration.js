@@ -42,11 +42,17 @@ const registrationSchema = new Schema({
             "rejected",
             "waitlisted",
             "cancelled",
-            "attended",
-            "absent"
         ],
         default: "pending",
     },
+    attendanceStatus: {
+        type:String,
+        enum:[
+            "not_marked" ,
+            "attended" ,
+        "absent"],
+        
+          default: "not_marked"},
 
     registeredAt:
     {

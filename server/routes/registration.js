@@ -1,58 +1,110 @@
 import express from "express";
-import { authMiddleware } from "../middlewares/authMiddleware.js";
-import { approveRegistration, rejectRegistration } from "../controllers/registrationController.js";
-import { isValidObjectId } from "../controllers/eventController.js";
+import { authMiddleware, optionalAuth } from "../middlewares/authMiddleware.js";
+import { registerForEventSchema, registrationDeleteSchema } from "../validators/registrationValidator.js";
+import {
+    registerForEvent,
+    getEventRegistrations,
+    cancelRegistration,
+    approveRegistration,
+    rejectRegistration,
+} from "../controllers/registrationController.js";
 
 const registrationRouter = express.Router();
 
+registrationRouter.post("/events/:eventId/register", optionalAuth, async (req, res) => {
+    const registerEventResult = registerForEventSchema.safeParse(req.body);
+
+    if (!registerEventResult.success) {
+        return res.status(400).json({
+            message: "event register validation failed",
+            errors: registerEventResult.error.issues,
+        });
+    }
+
+    const userId = req.user?.id ?? null;
+
+    try {
+        const result = await registerForEvent(req.params.eventId, registerEventResult.data, userId);
+
+        if (!result.ok) {
+            return res.status(result.status).json({ message: result.message });
+        }
+
+        return res.status(result.status).json({
+            message: result.message,
+            status: result.statusValue,
+            registrationId: result.registrationId,
+        });
+    } catch (error) {
+        if (error.code === 11000) {
+            return res.status(400).json({ message: "already registered for this event" });
+        }
+        return res.status(500).json({ message: "server error" });
+    }
+});
+
+registrationRouter.get("/events/:eventId", authMiddleware, async (req, res) => {
+    try {
+        const result = await getEventRegistrations(req.params.eventId, req.user.id);
+
+        if (!result.ok) {
+            return res.status(result.status).json({ message: result.message });
+        }
+
+        return res.status(result.status).json({
+            message: result.message,
+            registration: result.registrations,
+        });
+    } catch (error) {
+        return res.status(500).json({ message: "server error" });
+    }
+});
+
+registrationRouter.delete("/:id", async (req, res) => {
+    const registrationDeleteResult = registrationDeleteSchema.safeParse(req.body);
+
+    if (!registrationDeleteResult.success) {
+        return res.status(400).json({
+            message: "event delete validation failed",
+            errors: registrationDeleteResult.error.issues,
+        });
+    }
+
+    try {
+        const result = await cancelRegistration(req.params.id, registrationDeleteResult.data.email);
+
+        if (!result.ok) {
+            return res.status(result.status).json({ message: result.message });
+        }
+
+        return res.status(result.status).json({ message: result.message });
+    } catch (error) {
+        return res.status(500).json({ message: "server error" });
+    }
+});
 
 registrationRouter.patch("/:id/approve", authMiddleware, async (req, res) => {
-
-    const registrationId = req.params.id;
-    const hostId = req.user.id;
     try {
-        const result = await approveRegistration(registrationId, hostId)
-        if(result.ok){
-            return res.status(result.status).json({
-                message:result.message,
-                Registration:result.updated
-            })
-        }
-        if(!result.ok){
-            return res.status(result.status).json({
-                message:result.message,
-                Registration:result.updated
-            })}
+        const result = await approveRegistration(req.params.id, req.user.id);
+        return res.status(result.status).json({
+            message: result.message,
+            Registration: result.updated,
+        });
     } catch (error) {
-        console.log(error)
-        return res.status(500).json({
-            message: "server error"
-        })
+        return res.status(500).json({ message: "server error" });
     }
-  });
+});
 
-  registrationRouter.patch("/:id/reject", authMiddleware, async (req, res) => {
-    const registrationId = req.params.id;
-    const hostId = req.user.id;
+registrationRouter.patch("/:id/reject", authMiddleware, async (req, res) => {
     try {
-        const result = await rejectRegistration(registrationId, hostId)
-        if(result.ok){
-            return res.status(result.status).json({
-                message:result.message,
-                Registration:result.updated
-            })
-        }
-        if(!result.ok){
-            return res.status(result.status).json({
-                message:result.message,
-                Registration:result.updated
-            })}
+        const result = await rejectRegistration(req.params.id, req.user.id);
+        return res.status(result.status).json({
+            message: result.message,
+            Registration: result.updated,
+        });
     } catch (error) {
-        return res.status(500).json({
-            message: "server error"
-        })
+        return res.status(500).json({ message: "server error" });
     }
-  });
+});
 
-
-  export {registrationRouter }
+export { registrationRouter };

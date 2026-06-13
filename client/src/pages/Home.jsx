@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-
 function Home() {
     return <div className="bg-black text-white h-screen flex justify-center items-center">
       <h1 className="text-5xl font-bold">

@@ -9,6 +9,7 @@ import CreateEvent from './pages/CreateEvent';
 import EditEvent from './pages/EditEvent';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
+import  ManageRegistrationsPage from './pages/ManageRegistrationsPage';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 function App() {
 
@@ -21,6 +22,12 @@ function App() {
   <Route path='/login' element={<LoginPage></LoginPage>}></Route>
   <Route path='/register' element={<RegisterPage></RegisterPage>}></Route>
   <Route path='/eventlisting' element={<EventListingPage></EventListingPage>}></Route>
+
+<Route path="/events/:eventId/registrations" element={
+  <ProtectedRoute>
+  <ManageRegistrationsPage />
+  </ProtectedRoute>
+}></Route>
 
 
   <Route path='/dashboard/' element={

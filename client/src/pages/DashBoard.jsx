@@ -49,6 +49,9 @@ function DashBoard() {
         await api.delete(`/api/events/${id}`)
         await fetchData();
     }
+    function manageRegistrations(id){
+        navigate(`/events/${id}/registrations`)
+    }
     return <>
         dashboard page
         {loading ? <p className="text-blue-700">getting the data</p>
@@ -68,7 +71,8 @@ function DashBoard() {
                                 </button>------ 
                                 {event.status} 
                                 {event.status==="draft"&&<>------<button onClick={()=>statuschange(event._id)}>status change</button></>}-------
-                                <><button onClick={()=>deleteEvent(event._id)}>delete</button></>
+                                <><button onClick={()=>deleteEvent(event._id)}>delete</button>------
+                                <button onClick={()=>manageRegistrations(event._id)}>manage registrations</button></>
                                 </li> 
                         ))}
                         </ul>
