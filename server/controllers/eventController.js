@@ -25,6 +25,11 @@ async function getAllEventsByUser(hostId) {
     return events;
 }
 
+async function getEventById(hostId,eventId) {
+    const event = await Event.findOne({ host: hostId,_id:eventId} );
+    return event;
+}
+
 async function getEventBySlug(req_slug) {
     const eventData = await Event.findOne({ slug: req_slug, status: "published" });
     if (!eventData) {
@@ -85,6 +90,7 @@ async function updateEventStatus(hostId, eventId, status) {
 export {
     createEvent,
     getAllEvents,
+    getEventById,
     getAllEventsByUser,
     getEventBySlug,
     eventUpdate,

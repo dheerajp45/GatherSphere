@@ -6,11 +6,7 @@ import { userCreate,formatAuthUser } from "../controllers/authController.js";
 import { User } from "../models/user.js";
 import { generateToken } from "../controllers/generateToken.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
-
-// authRouter.get("/test",function(req,res){
-//     res.send("this is register page")
-// })
-
+import { linkRegistrationsToUser } from "../services/registrationLink.js";
 
 authRouter.post("/register", async function (req, res) {
     const registerResult = registerSchema.safeParse(req.body);
@@ -27,6 +23,7 @@ authRouter.post("/register", async function (req, res) {
             message: "new user registered",
             token:userData.token,
             user:formatAuthUser(userData.user),
+            linkStatus :userData.linkStatus
         })
     } catch (error) {
 
@@ -45,7 +42,7 @@ authRouter.post("/register", async function (req, res) {
 })
 
 authRouter.post("/login", async function (req, res) {
-    // console.log(req.body);
+
 
     const loginResult = loginSchema.safeParse(req.body);
 
@@ -65,16 +62,24 @@ authRouter.post("/login", async function (req, res) {
         return res.status(401).json({message:"user not found"})
     }
     const pwd_correct = await loggedUser.comparePassword(password)
- 
+
      if(!pwd_correct){
         return res.status(401).json({message:"incorrect password"})
     }
-    else{
+    else{    
+        const registrationsLinkCount = await linkRegistrationsToUser(loggedUser._id,loggedUser.email);
+        let linkStatus=""
+         if (registrationsLinkCount>0) {
+             linkStatus=`linked ${registrationsLinkCount} guest registrations`
+         } else {
+             linkStatus = "nothing to link";
+         }
         const token = generateToken(loggedUser)
 
         return res.status(200).json({message:"login done",
             token:token,
-            user:formatAuthUser(loggedUser)
+            user:formatAuthUser(loggedUser),
+           linkStatus:linkStatus   
         })
     }
 

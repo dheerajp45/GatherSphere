@@ -3,7 +3,7 @@ import { Event } from "../models/event.js";
 import { isValidObjectId } from "../utils/isValidObjectId.js";
 import { eventHostValidation } from "../utils/eventHostValidation.js";
 
-const APPROVABLE = ["pending", "waitlisted"];
+const APPROVABLE = ["pending", "waitlisted","rejected"];
 
 async function registerForEvent(eventId, data, userId) {
     if (!isValidObjectId(eventId)) {

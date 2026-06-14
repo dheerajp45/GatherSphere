@@ -52,6 +52,16 @@ function DashBoard() {
     function manageRegistrations(id){
         navigate(`/events/${id}/registrations`)
     }
+
+    async function closeRegistrations(eventId){
+        try {
+            await api.patch(`/api/events/${eventId}/status`, { status: "registration_closed" });
+            await fetchData();
+        } catch (error) {
+            setError(error.response?.data?.message || "Failed to close registration");
+        }
+
+    }
     return <>
         dashboard page
         {loading ? <p className="text-blue-700">getting the data</p>
@@ -72,7 +82,8 @@ function DashBoard() {
                                 {event.status} 
                                 {event.status==="draft"&&<>------<button onClick={()=>statuschange(event._id)}>status change</button></>}-------
                                 <><button onClick={()=>deleteEvent(event._id)}>delete</button>------
-                                <button onClick={()=>manageRegistrations(event._id)}>manage registrations</button></>
+                                <button onClick={()=>manageRegistrations(event._id)}>manage registrations</button>----
+                                {event.status!=="registration_closed" && <button onClick={()=>closeRegistrations(event._id)}>close registrations</button>}</>
                                 </li> 
                         ))}
                         </ul>

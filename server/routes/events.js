@@ -6,6 +6,7 @@ import {
     getAllEvents,
     getAllEventsByUser,
     getEventBySlug,
+    getEventById,
     eventUpdate,
     deleteEvent,
     updateEventStatus,
@@ -71,6 +72,22 @@ eventRouter.get("/my/events", authMiddleware, async function (req, res) {
         return res.status(500).json({ message: "server error" });
     }
 });
+
+eventRouter.get("/my/event/:eventId",authMiddleware,async function (req,res) {
+    const hostId = req.user.id;
+    const eventId =req.params.eventId;
+
+    try {
+        const event = await getEventById(hostId,eventId);
+        return res.status(200).json({
+            message: "event  fetched",
+            event: event,
+        });
+    } catch (error) {
+        return res.status(500).json({ message: "server error" });
+    }
+
+})
 
 eventRouter.get("/:slug", async function (req, res) {
     try {
