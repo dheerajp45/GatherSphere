@@ -10,6 +10,7 @@ import { eventRouter} from "./routes/events.js";
 import { dashboardRouter } from "./routes/dashboard.js";
 import { registrationRouter } from "./routes/registration.js";
 
+
 app.use(express.json());
 app.use("/api/auth",authRouter)
 app.use("/api/events",eventRouter)
@@ -22,7 +23,6 @@ res.send("hi hello server started")
 
 app.listen(PORT,async ()=>{
     console.log(`server running on http://localhost:${PORT}`);
-    
     await connectDB();
 
 })

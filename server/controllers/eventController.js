@@ -31,7 +31,7 @@ async function getEventById(hostId,eventId) {
 }
 
 async function getEventBySlug(req_slug) {
-    const eventData = await Event.findOne({ slug: req_slug, status: "published" });
+    const eventData = await Event.findOne({ slug: req_slug, status:{$in :["published","registration_closed", "completed","cancelled" ] } });
     if (!eventData) {
         return null;
     }

@@ -22,9 +22,10 @@ registrationRouter.post("/events/:eventId/register", optionalAuth, async (req, r
     }
 
     const userId = req.user?.id ?? null;
+    const userMail = req.user?.email??null;
 
     try {
-        const result = await registerForEvent(req.params.eventId, registerEventResult.data, userId);
+        const result = await registerForEvent(req.params.eventId, registerEventResult.data, userId,userMail);
 
         if (!result.ok) {
             return res.status(result.status).json({ message: result.message });

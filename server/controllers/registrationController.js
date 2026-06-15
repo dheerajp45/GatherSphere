@@ -2,10 +2,10 @@ import { Registration } from "../models/registration.js";
 import { Event } from "../models/event.js";
 import { isValidObjectId } from "../utils/isValidObjectId.js";
 import { eventHostValidation } from "../utils/eventHostValidation.js";
-
+import {sendEmail} from "../utils/email.js"
 const APPROVABLE = ["pending", "waitlisted","rejected"];
 
-async function registerForEvent(eventId, data, userId) {
+async function registerForEvent(eventId, data, userId,userMail) {
     if (!isValidObjectId(eventId)) {
         return { ok: false, status: 400, message: "invalid event id" };
     }
@@ -53,10 +53,19 @@ async function registerForEvent(eventId, data, userId) {
                 phone: data.phone,
                 organization: data.organization,
                 status,
-                ...(userId && { userId }),
+                // ...(userId && { userId }),
+                ...(userId && userMail === data.email.toLowerCase() && { userId }),
             },
             { new: true }
         );
+        if(updated){
+            const emailBody={
+                to:updated.email,
+                subject:"registration received again",
+                 text:"you again re Registred for the event "
+            }
+            await sendEmail(emailBody)
+        }
 
         return {
             ok: true,
@@ -76,12 +85,19 @@ async function registerForEvent(eventId, data, userId) {
         status,
     };
 
-    if (userId) {
+    if (userId&& userMail === registrationData.email) {
         registrationData.userId = userId;
     }
 
     const newRegistration = await Registration.create(registrationData);
-
+    if(newRegistration){
+        const emailBody={
+            to:registrationData.email,
+            subject:"registration received",
+             text:"Registration for the event created"
+        }
+        await sendEmail(emailBody)
+    }
     return {
         ok: true,
         status: 201,
@@ -89,6 +105,7 @@ async function registerForEvent(eventId, data, userId) {
         statusValue: newRegistration.status,
         registrationId: newRegistration._id,
     };
+
 }
 
 async function getEventRegistrations(eventId, hostId) {
@@ -134,7 +151,15 @@ async function cancelRegistration(registrationId, email) {
         return { ok: false, status: 400, message: "already cancelled" };
     }
 
-    await Registration.findByIdAndUpdate(registrationId, { status: "cancelled" }, { new: true });
+    const updated = await Registration.findByIdAndUpdate(registrationId, { status: "cancelled" }, { new: true });
+    if(updated){
+        const emailBody={
+            to:registration.email,
+            subject:"registration cancelled",
+            text:"Registration for the event cancelled"
+        }
+        await sendEmail(emailBody)
+    }
     await promoteFromWaitlist(registration.event);
 
     return { ok: true, status: 200, message: "registration cancelled" };
@@ -181,7 +206,14 @@ async function approveRegistration(registrationId, hostId) {
         { status: "approved" },
         { new: true }
     );
-
+    if(updated){
+        const emailBody={
+            to:reg.email,
+            subject:"registration approved",
+            text:"Registration for the event approved"
+        }
+        await sendEmail(emailBody)
+    }
     return {
         ok: true,
         status: 200,
@@ -210,6 +242,14 @@ async function rejectRegistration(registrationId, hostId) {
         { status: "rejected" },
         { new: true }
     );
+    if(updated){
+        const emailBody={
+            to:reg.email,
+            subject:"registration rejected",
+            text:"Registration for the event rejected"
+        }
+        await sendEmail(emailBody)
+    }
 
     return {
         ok: true,
@@ -240,7 +280,14 @@ async function promoteFromWaitlist(eventId) {
     }
 
     const updated = await Registration.findByIdAndUpdate(oldest._id, { status: "approved" }, { new: true });
-
+    if(updated){
+        const emailBody={
+            to:oldest.email,
+            subject:"registration approved",
+            text:"Registration for the event approved"
+        }
+        await sendEmail(emailBody)
+    }
     return {
         status: 200,
         ok: true,

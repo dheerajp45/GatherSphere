@@ -43,7 +43,9 @@ function EventDetailPage() {
                     : !event ? <p className="text-green-700">No events found</p>
                         :(<><h3>{event.title}</h3>  <br /> <p>{event.description}</p>
                        <SeatsCounter capacity={event.capacity} seatsLeft={seats}/>
-                       <RegistrationForm eventId={event._id} />
+                       {event.status ==="registration_closed" && <p className="text-red-700">event registraitons closed</p>}
+                       {event.status === "published" && <RegistrationForm eventId={event._id} />}
+
                         </>
                         )
       }

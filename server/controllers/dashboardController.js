@@ -30,6 +30,12 @@ async function  totalRegistrationsDone(hostId){
     })
     return count;
 }
+async function getMyRegistrations(userId) {
+    const myRegistrations=await Registration.find({userId:userId}).populate("event");
+    return myRegistrations
+    
+}
 
 
-export {eventHostedByUser,upcomingEvents,totalRegistrationsDone}
+
+export {eventHostedByUser,upcomingEvents,totalRegistrationsDone,getMyRegistrations}
