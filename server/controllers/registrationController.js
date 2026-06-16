@@ -45,17 +45,20 @@ async function registerForEvent(eventId, data, userId,userMail) {
         if (existingRegistration.status !== "cancelled") {
             return { ok: false, status: 400, message: "event already registered" };
         }
-
+        const update = {
+            name: data.name,
+            phone: data.phone,
+            organization: data.organization,
+            status,
+          };
+          if (userId && userMail?.toLowerCase() === data.email.toLowerCase()) {
+            update.userId = userId;  
+          } else {
+            update.userId = null;     
+          }
         const updated = await Registration.findByIdAndUpdate(
             existingRegistration._id,
-            {
-                name: data.name,
-                phone: data.phone,
-                organization: data.organization,
-                status,
-                // ...(userId && { userId }),
-                ...(userId && userMail === data.email.toLowerCase() && { userId }),
-            },
+            update,
             { new: true }
         );
         if(updated){
@@ -151,7 +154,7 @@ async function cancelRegistration(registrationId, email) {
         return { ok: false, status: 400, message: "already cancelled" };
     }
 
-    const updated = await Registration.findByIdAndUpdate(registrationId, { status: "cancelled" }, { new: true });
+    const updated = await Registration.findByIdAndUpdate(registrationId, { status: "cancelled",userId: null }, { new: true });
     if(updated){
         const emailBody={
             to:registration.email,

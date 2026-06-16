@@ -17,6 +17,7 @@ function CreateEvent() {
         eventType: "offline",
         capacity: "",
         bannerImage: "",
+        registrationMode: "auto",
         venue: { name: "", address: "", mapLink: "" },
         online: { platform: "", meetingLink: "" },
     });
@@ -126,6 +127,14 @@ function CreateEvent() {
                 onChange={handleChange}
                 placeholder="Capacity"
             />
+            <select
+  name="registrationMode"
+  value={formData.registrationMode}
+  onChange={handleChange}
+>
+  <option value="auto">Auto approval</option>
+  <option value="manual">Manual approval</option>
+</select>
 
 
             {formData.eventType === "offline" && (

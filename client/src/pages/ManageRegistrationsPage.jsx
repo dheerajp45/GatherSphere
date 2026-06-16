@@ -70,7 +70,7 @@ function ManageRegistrationsPage() {
             </>
           )}
           {registrations.length === 0 ? (
-            <p className="text-green-700">No events Found</p>
+            <p className="text-green-700">No registrations Found</p>
           ) : (
             <ul className="list-disc list-inside space-y-2 text-grey">
               {registrations.map((r) => (

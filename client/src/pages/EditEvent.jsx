@@ -20,6 +20,7 @@ function EditEvent(){
         eventType: "offline",
         capacity: "",
         bannerImage: "",
+        registrationMode: "auto",
         venue: { name: "", address: "", mapLink: "" },
         online: { platform: "", meetingLink: "" },
     });
@@ -46,6 +47,7 @@ function EditEvent(){
                     eventType: found.eventType,
                     capacity: found.capacity,
                     bannerImage: found.bannerImage || "",
+                    registrationMode: found.registrationMode || "auto",
                     venue: found.venue || { name: "", address: "", mapLink: "" },
                     online: found.online || { platform: "", meetingLink: "" },
                   });
@@ -169,6 +171,14 @@ function EditEvent(){
                 onChange={handleChange}
                 placeholder="Capacity"
             />
+            <select
+  name="registrationMode"
+  value={formData.registrationMode}
+  onChange={handleChange}
+>
+  <option value="auto">Auto approval</option>
+  <option value="manual">Manual approval</option>
+</select>
 
 
             {formData.eventType === "offline" && (
