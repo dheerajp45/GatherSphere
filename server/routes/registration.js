@@ -1,12 +1,12 @@
 import express from "express";
 import { authMiddleware, optionalAuth } from "../middlewares/authMiddleware.js";
-import { registerForEventSchema, registrationDeleteSchema } from "../validators/registrationValidator.js";
+import { registerForEventSchema, registrationDeleteSchema,attendanceSchema ,checkInSchema} from "../validators/registrationValidator.js";
 import {
     registerForEvent,
     getEventRegistrations,
     cancelRegistration,
     approveRegistration,
-    rejectRegistration,
+    rejectRegistration,markAttendance,getTicketByToken,getTicketById,checkInByToken
 } from "../controllers/registrationController.js";
 
 const registrationRouter = express.Router();
@@ -107,5 +107,92 @@ registrationRouter.patch("/:id/reject", authMiddleware, async (req, res) => {
         return res.status(500).json({ message: "server error" });
     }
 });
+registrationRouter.patch("/:id/attendance",authMiddleware, async (req, res) =>{
+    const parsed = attendanceSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ message: "validation failed", errors: parsed.error.issues });
+  }
+    try {
+        const result = await  markAttendance(req.params.id, req.user.id,parsed.data.attendanceStatus);
+        if (!result.ok) {
+            return res.status(result.status).json({ message: result.message });
+          }
+        return res.status(result.status).json({
+            message: result.message,
+            Registration: result.updated,
+        });
+    } catch (error) {
+
+        
+        return res.status(500).json({ message: "server error" });
+    }
+})
+
+registrationRouter.get("/ticket/:ticketToken", async function(req,res){
+    const tickenToken= req.params.ticketToken
+try{
+    const result = await getTicketByToken(tickenToken)
+    if(!result.ok){
+        return res.status(result.status).json({ message: result.message });
+    }
+    return res.status(result.status).json({
+        message: result.message,
+        ticketToken:result.ticketToken,
+        name:result.name,
+        checkedInAt:result.checkedInAt,
+        eventTitle:result.eventTitle
+    });
+}catch(error){
+    return res.status(500).json({ message: "server error" });
+}
+} )
+
+registrationRouter.get("/:id/ticket",authMiddleware,async function(req,res){
+const registrationId = req.params.id;
+const userId= req.user.id
+try{
+    const result = await getTicketById(registrationId,userId)
+    if(!result.ok){
+        return res.status(result.status).json({ message: result.message });
+    }
+    return res.status(result.status).json({
+        message: result.message,
+        ticketToken:result.ticketToken,
+        name:result.name,
+        checkedInAt:result.checkedInAt,
+        eventTitle:result.eventTitle
+    });
+}catch(error){
+    console.log(error);
+    
+    return res.status(500).json({ message: "server error" });
+}
+})
+
+registrationRouter.post("/check-in",authMiddleware,async function (req,res){
+    const checkInResult = checkInSchema.safeParse(req.body);
+    if (!checkInResult.success) {
+        return res.status(400).json({
+            message: "event register validation failed",
+            errors: checkInResult.error.issues,
+        });
+    }try {
+        const result=await checkInByToken(checkInResult.data.ticketToken,req.user.id)
+        if (!result.ok) {
+            return res.status(result.status).json({ message: result.message });
+          }
+        return res.status(result.status).json({
+            message: result.message,
+            eventTitle: result.eventTitle
+        });
+    } catch (error) {
+        
+        
+        return res.status(500).json({ message: "server error" });
+
+    }
+    
+
+})
 
 export { registrationRouter };

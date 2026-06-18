@@ -3,6 +3,7 @@ import { Event } from "../models/event.js";
 import { isValidObjectId } from "../utils/isValidObjectId.js";
 import { eventHostValidation } from "../utils/eventHostValidation.js";
 import {sendEmail} from "../utils/email.js"
+import {issueTicket} from "../utils/ticket.js"
 const APPROVABLE = ["pending", "waitlisted","rejected"];
 
 async function registerForEvent(eventId, data, userId,userMail) {
@@ -50,6 +51,7 @@ async function registerForEvent(eventId, data, userId,userMail) {
             phone: data.phone,
             organization: data.organization,
             status,
+            ...(status==="approved"? issueTicket():{})
           };
           if (userId && userMail?.toLowerCase() === data.email.toLowerCase()) {
             update.userId = userId;  
@@ -62,10 +64,14 @@ async function registerForEvent(eventId, data, userId,userMail) {
             { new: true }
         );
         if(updated){
+            let text = "Registration received for the event.";
+if (updated.status === "approved" && updated.ticketToken) {
+  text += `\nYour ticket: http://localhost:5173/ticket/${updated.ticketToken}`;
+}
             const emailBody={
                 to:updated.email,
                 subject:"registration received again",
-                 text:"you again re Registred for the event "
+                 text
             }
             await sendEmail(emailBody)
         }
@@ -86,6 +92,7 @@ async function registerForEvent(eventId, data, userId,userMail) {
         phone: data.phone,
         organization: data.organization,
         status,
+        ...(status ==="approved"? issueTicket():{})
     };
 
     if (userId&& userMail === registrationData.email) {
@@ -94,10 +101,14 @@ async function registerForEvent(eventId, data, userId,userMail) {
 
     const newRegistration = await Registration.create(registrationData);
     if(newRegistration){
+        let text = "Registration received for the event.";
+if (newRegistration.status === "approved" && newRegistration.ticketToken) {
+  text += `\nYour ticket: http://localhost:5173/ticket/${newRegistration.ticketToken}`;
+}
         const emailBody={
             to:registrationData.email,
             subject:"registration received",
-             text:"Registration for the event created"
+                             text
         }
         await sendEmail(emailBody)
     }
@@ -154,7 +165,14 @@ async function cancelRegistration(registrationId, email) {
         return { ok: false, status: 400, message: "already cancelled" };
     }
 
-    const updated = await Registration.findByIdAndUpdate(registrationId, { status: "cancelled",userId: null }, { new: true });
+    const updated = await Registration.findByIdAndUpdate(registrationId, { 
+        status: "cancelled",
+        userId: null ,
+        ticketToken:null,
+        checkedInAt: null,
+        checkInMethod: null,
+        attendanceStatus: "not_marked",
+    }, { new: true });
     if(updated){
         const emailBody={
             to:registration.email,
@@ -206,14 +224,17 @@ async function approveRegistration(registrationId, hostId) {
 
     const updated = await Registration.findByIdAndUpdate(
         registrationId,
-        { status: "approved" },
+        { status: "approved", ...issueTicket() },
         { new: true }
     );
+    
     if(updated){
+
         const emailBody={
             to:reg.email,
             subject:"registration approved",
-            text:"Registration for the event approved"
+                 text:`you have been approved for the event ,
+                 Your ticket: http://localhost:5173/ticket/${updated.ticketToken}`
         }
         await sendEmail(emailBody)
     }
@@ -222,6 +243,7 @@ async function approveRegistration(registrationId, hostId) {
         status: 200,
         message: "registration updated",
         updated,
+    
     };
 }
 
@@ -282,12 +304,14 @@ async function promoteFromWaitlist(eventId) {
         return { ok: false, status: 400, message: "there are no registrations to be approved" };
     }
 
-    const updated = await Registration.findByIdAndUpdate(oldest._id, { status: "approved" }, { new: true });
+    const updated = await Registration.findByIdAndUpdate(oldest._id, { status: "approved", ...issueTicket() }, { new: true });
     if(updated){
+
         const emailBody={
             to:oldest.email,
             subject:"registration approved",
-            text:"Registration for the event approved"
+                            text:`you have been approved for the event ,
+                 Your ticket: http://localhost:5173/ticket/${updated.ticketToken}`
         }
         await sendEmail(emailBody)
     }
@@ -299,6 +323,133 @@ async function promoteFromWaitlist(eventId) {
     };
 }
 
+async function  markAttendance(registrationId, hostId, attendanceStatus) {
+    if (!isValidObjectId(registrationId)) {
+        return { ok: false, status: 400, message: "invalid registration id" };
+    }
+
+    const reg = await Registration.findById(registrationId);
+    if (!reg) {
+        return { ok: false, status: 404, message: "registration not found" };
+    }
+
+    const isHost = await eventHostValidation(hostId, reg.event);
+    if (!isHost.ok) {
+        return { ok: false, status: 403, message: "Not authorized" };
+    }
+
+    if(reg.status !== "approved"){
+        return { ok: false, status: 400, message: "Not Approved for the event" };
+        }
+        let date = null
+if(attendanceStatus==="attended") date = new Date()
+    // if(attendanceStatus==="absent") checkedInAt = null
+       const update={
+            attendanceStatus :attendanceStatus,
+      checkInMethod :"manual",
+      checkedInAt: date
+        }
+    
+       const updatedData =  await Registration.findByIdAndUpdate(registrationId,update,{new:true} )
+       return {
+        ok: true,
+        status: 200,           
+        message: `marked ${attendanceStatus}`,
+        updated: updatedData,    
+      };
+}
+async function getTicketByToken(ticketToken){
+    if(!ticketToken){
+        return   { ok: false, status: 400, message: "token not availble" };
+    }
+   const registrationDetails = await  Registration.findOne({ ticketToken }).populate("event", "title date startTime endTime eventType venue online status slug")
+
+  if(!registrationDetails){
+    return { ok: false, status: 404 , message: "ticket not found" };
+  }
+
+  if(registrationDetails.status!=="approved"){
+    return   { ok: false, status: 400, message: " ticket not available" };
+  }
+  return{
+    ok:true,
+    status:200,
+    message:"token fetched and details are sent",
+    ticketToken:registrationDetails.ticketToken,
+    name:registrationDetails.name,
+    checkedInAt:registrationDetails.checkedInAt,
+    eventTitle:registrationDetails.event.title,
+  }
+}
+
+async function getTicketById(registrationId, userId){
+    if (!isValidObjectId(registrationId)) {
+        return { ok: false, status: 400, message: "invalid registration id" };
+    }
+
+    const registrationDetails = await  Registration.findById( registrationId ).populate("event", "title date startTime endTime eventType venue online status slug")
+    if (!registrationDetails) {
+        return { ok: false, status: 404, message: "registration not found" };
+    }
+    if(String(registrationDetails.userId)!==String(userId)){
+        return { ok: false, status: 403, message: "unauthorized registration" };
+    }
+    if(!registrationDetails.ticketToken){
+        return   { ok: false, status: 400, message: "token not availble" };
+    }
+    if(registrationDetails.status!=="approved"){
+        return   { ok: false, status: 400, message: " ticket not available" };
+      }
+
+      
+      return{
+        ok:true,
+        status:200,
+        message:"token fetched and details are sent",
+        ticketToken:registrationDetails.ticketToken,
+        name:registrationDetails.name,
+        checkedInAt:registrationDetails.checkedInAt,
+        eventTitle:registrationDetails.event.title,
+      }
+
+}
+
+async function checkInByToken(ticketToken, hostId){
+    if(!ticketToken){
+        return   { ok: false, status: 400, message: "token not availble" };
+    }
+   const registrationDetails = await  Registration.findOne({ ticketToken }).populate("event", "title date startTime endTime eventType venue online status slug")
+
+  if(!registrationDetails){
+    return { ok: false, status: 404 , message: "ticket not found" };
+  }
+
+  if(registrationDetails.status!=="approved"){
+    return   { ok: false, status: 400, message: " ticket not available" };
+  }
+  const isHost = await eventHostValidation(hostId, registrationDetails.event._id);
+  if (!isHost.ok) {
+      return { ok: false, status: 403, message: "Not authorized" };
+  }
+  if(registrationDetails.attendanceStatus === "attended"){
+    return   { ok: true, status: 200, message:"already checked in" };
+  }
+  
+  const updated = await Registration.findByIdAndUpdate(registrationDetails._id,{
+    attendanceStatus:"attended",
+    checkedInAt:new Date(),
+    checkInMethod:"qr"
+  },{new:true})
+
+  return{
+    ok:true,
+    status: 200,
+    message:"attendence by qr marked",
+    name:registrationDetails.name,
+    eventTitle:registrationDetails.event.title,
+    checkedInAt:updated.checkedInAt
+  }
+}
 export {
     registerForEvent,
     getEventRegistrations,
@@ -307,4 +458,6 @@ export {
     approveRegistration,
     rejectRegistration,
     promoteFromWaitlist,
+    markAttendance,
+    getTicketByToken,getTicketById,checkInByToken
 };

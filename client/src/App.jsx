@@ -9,8 +9,10 @@ import CreateEvent from './pages/CreateEvent';
 import EditEvent from './pages/EditEvent';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
+import TicketPage from './pages/TicketPage';
 import  ManageRegistrationsPage from './pages/ManageRegistrationsPage';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Camera from './pages/Camera';
 function App() {
 
 
@@ -18,6 +20,7 @@ function App() {
     <BrowserRouter>
     <Navbar />
 <Routes>
+  <Route path="/camera" element={<Camera></Camera>}></Route>
   <Route path="/" element={<Home></Home>}></Route>
   <Route path='/login' element={<LoginPage></LoginPage>}></Route>
   <Route path='/register' element={<RegisterPage></RegisterPage>}></Route>
@@ -36,7 +39,7 @@ function App() {
     </ProtectedRoute>
     }></Route>
 
-
+<Route path="/ticket/:ticketToken" element={<TicketPage></TicketPage>} />
   <Route path='/event/:slug' element={<EventDetailPage> </EventDetailPage>}></Route>
 
   <Route path='/events/create' element={

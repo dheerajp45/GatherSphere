@@ -75,9 +75,9 @@ function DashBoard() {
     async function handleCancelRegistration(registrationId, email) {
         try {
           await api.delete(`/api/registrations/${registrationId}`, {
-            data: { email },  // axios needs `data` for DELETE body
+            data: { email },  
           });
-          await fetchData(); // refresh list
+          await fetchData(); 
         } catch (error) {
           setError(error.response?.data?.message || "Cancel failed");
         }
@@ -86,6 +86,11 @@ function DashBoard() {
     function redirectToEventPage(slug){
         navigate(`/event/${slug}`)
     }
+    function openTicket(ticketToken) {
+      navigate(`/ticket/${ticketToken}`);
+    }
+
+
     return (
       <>
         dashboard page
@@ -159,12 +164,12 @@ function DashBoard() {
                     )}-----
                     <>{r.name}</>
                     ----
-                    <StatusBadge status={r.status} />
+                    <StatusBadge status={r.status} />-----
                     {r.status !== "cancelled" && r.status !== "rejected" && (
   <button onClick={() => handleCancelRegistration(r._id, r.email)}>
     Cancel
-  </button>
-)}
+  </button> 
+)}----- {r.status==="approved" && r.ticketToken && (<button onClick={()=> openTicket(r.ticketToken)}>Ticket</button>)}
                   </li>
                 ))}
               </ul>

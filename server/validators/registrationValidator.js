@@ -8,4 +8,10 @@ const registerForEventSchema = z.object({
 const registrationDeleteSchema = z.object({
   email:z.string().min(1).email({message:"invalid email"}),
 })
-  export {registerForEventSchema,registrationDeleteSchema}
+const attendanceSchema = z.object({
+  attendanceStatus: z.enum(["attended", "absent"])
+})
+const checkInSchema = z.object({
+  ticketToken: z.string().min(1, { message: "ticket token required" })
+})
+  export {registerForEventSchema,registrationDeleteSchema,attendanceSchema,checkInSchema}

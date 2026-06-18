@@ -42,6 +42,16 @@ function ManageRegistrationsPage() {
     }
   }
 
+  async function handleAttendance(attendanceStatus,registrationId){
+    try{
+    await api.patch(`/api/registrations/${registrationId}/attendance`,{attendanceStatus:attendanceStatus});
+    }catch(error){
+      setError(error.response?.data?.message || "attendance marked failed");
+    } finally{
+      await fetchData();
+    }
+        }
+
   async function handleReject(registrationId) {
     try {
       await api.patch(`/api/registrations/${registrationId}/reject`);
@@ -86,7 +96,14 @@ function ManageRegistrationsPage() {
                   )}
                   {r.status !== "rejected" && r.status !== "cancelled" && (
                     <button onClick={() => handleReject(r._id)}>Reject</button>
-                  )}
+                  )}-----
+                  {r.attendanceStatus}
+                  {
+                    r.status==="approved"&& r.attendanceStatus==="not_marked"&&( <>----
+                      <button onClick={()=>handleAttendance("attended",r._id,)}>attended</button>
+                      ------ <button onClick={()=>handleAttendance("absent",r._id,)}>absent</button>
+                      </> )
+                  }
                 </li>
               ))}
             </ul>

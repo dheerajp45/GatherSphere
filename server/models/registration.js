@@ -58,7 +58,19 @@ const registrationSchema = new Schema({
     {
         type: Date,
         default: Date.now
-    }
+    },
+    ticketToken: {
+        type: String,
+        unique: true,
+        sparse: true,   
+      },
+      checkedInAt: {
+        type: Date,
+      },
+      checkInMethod: {
+        type: String,
+        enum: ["manual", "qr"],
+      },
 })
 registrationSchema.index({"event":1, "email":1},{unique:true});
 
