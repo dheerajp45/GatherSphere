@@ -1,7 +1,8 @@
 import cors from "cors"
 import express from "express"
 import { PORT } from "./config/env.js";
-import {connectDB} from "./config/db.js"
+import { connectDB } from "./config/db.js";
+import { verifyEmailTransport } from "./utils/email.js";
 const app = express();
 app.use(cors({origin:"http://localhost:5173"}))
 
@@ -21,8 +22,8 @@ app.get("/",(req,res)=>{
 res.send("hi hello server started")
 })
 
-app.listen(PORT,async ()=>{
+app.listen(PORT, async () => {
     console.log(`server running on http://localhost:${PORT}`);
     await connectDB();
-
-})
+    await verifyEmailTransport();
+});

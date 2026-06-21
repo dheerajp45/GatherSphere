@@ -1,116 +1,270 @@
 import { useState, useEffect } from "react";
 import api from "../api/axios";
-import { useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import StatusBadge from "../components/StatusBadge.jsx";
+import { SeatsCounter } from "../components/SeatsCounter.jsx";
 
+const btnOutline =
+  "rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-sm font-medium text-neutral-800 hover:bg-neutral-50";
+const btnPrimary =
+  "rounded-lg bg-black px-3 py-1.5 text-sm font-medium text-white hover:bg-neutral-800";
+const btnSuccess =
+  "rounded-lg border border-green-200 bg-green-50 px-3 py-1.5 text-sm font-medium text-green-800 hover:bg-green-100";
+const btnDanger =
+  "rounded-lg border border-red-200 bg-white px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50";
+
+function attendanceLabel(status) {
+  if (status === "attended") return "Attended";
+  if (status === "absent") return "Absent";
+  return "Not marked";
+}
+
+/**
+ * DATA:
+ *   GET /api/registrations/events/:eventId
+ *   GET /api/events/my/event/:eventId
+ */
 function ManageRegistrationsPage() {
+  const { eventId } = useParams();
+  const navigate = useNavigate();
   const [registrations, setRegistrations] = useState([]);
+  const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [event, setEvent] = useState(null);
-  const { eventId } = useParams();
+
+  const approvedCount = registrations.filter((r) => r.status === "approved").length;
+  const seatsRemaining = event != null ? event.capacity - approvedCount : null;
+
   async function fetchData() {
     setLoading(true);
-    setRegistrations([]);
     setError("");
-    (async () => {
-      try {
-        const registrationsResult = await api.get(
-          `/api/registrations/events/${eventId}`,
-        );
-        setRegistrations(registrationsResult.data.registration);
-
-        const eventDetails = await api.get(`/api/events/my/event/${eventId}`);
-        setEvent(eventDetails.data.event);
-      } catch (error) {
-        setError(error.response?.data?.message || "Cannot get data");
-      } finally {
-        setLoading(false);
-      }
-    })();
+    try {
+      const [regsRes, eventRes] = await Promise.all([
+        api.get(`/api/registrations/events/${eventId}`),
+        api.get(`/api/events/my/event/${eventId}`),
+      ]);
+      setRegistrations(regsRes.data.registration ?? []);
+      setEvent(eventRes.data.event);
+    } catch (err) {
+      setError(err.response?.data?.message || "Cannot load registrations");
+    } finally {
+      setLoading(false);
+    }
   }
+
   useEffect(() => {
     fetchData();
   }, [eventId]);
 
-  async function handleApprove(registrationId) {
+  async function approve(registrationId) {
     try {
       await api.patch(`/api/registrations/${registrationId}/approve`);
       await fetchData();
-    } catch (error) {
-      setError(error.response?.data?.message || "Action failed");
+    } catch (err) {
+      setError(err.response?.data?.message || "Approve failed");
     }
   }
 
-  async function handleAttendance(attendanceStatus,registrationId){
-    try{
-    await api.patch(`/api/registrations/${registrationId}/attendance`,{attendanceStatus:attendanceStatus});
-    }catch(error){
-      setError(error.response?.data?.message || "attendance marked failed");
-    } finally{
-      await fetchData();
-    }
-        }
-
-  async function handleReject(registrationId) {
+  async function reject(registrationId) {
     try {
       await api.patch(`/api/registrations/${registrationId}/reject`);
       await fetchData();
-    } catch (error) {
-      setError(error.response?.data?.message || "Action failed");
+    } catch (err) {
+      setError(err.response?.data?.message || "Reject failed");
     }
   }
-  const approvedCount = registrations.filter(
-    (r) => r.status === "approved",
-  ).length;
+
+  async function markAttendance(attendanceStatus, registrationId) {
+    try {
+      await api.patch(`/api/registrations/${registrationId}/attendance`, {
+        attendanceStatus,
+      });
+    } catch (err) {
+      setError(err.response?.data?.message || "Attendance update failed");
+    } finally {
+      await fetchData();
+    }
+  }
+
   return (
-    <>
-      Registation page
-      {loading ? (
-        <p className="text-blue-700">getting the data</p>
-      ) : error ? (
-        <p className="text-red-700">{error}</p>
-      ) : (
-        <div>
-          {event && (
-            <>
-              <h1>{event.title}</h1>-----
-              <h2>total capacity = {event.capacity}</h2>
-              <h2>remaining capacity = {event.capacity - approvedCount}</h2>
-            </>
-          )}
-          {registrations.length === 0 ? (
-            <p className="text-green-700">No registrations Found</p>
-          ) : (
-            <ul className="list-disc list-inside space-y-2 text-grey">
-              {registrations.map((r) => (
-                <li key={r._id}>
-                  {r.name}----{r.email}---{r.phone}--
-                  <StatusBadge status={r.status} /> ---
-                  {(r.status === "pending" ||
-                    r.status === "waitlisted" ||
-                    r.status === "rejected") && (
-                    <button onClick={() => handleApprove(r._id)}>
-                      Approve
-                    </button>
-                  )}
-                  {r.status !== "rejected" && r.status !== "cancelled" && (
-                    <button onClick={() => handleReject(r._id)}>Reject</button>
-                  )}-----
-                  {r.attendanceStatus}
-                  {
-                    r.status==="approved"&& r.attendanceStatus==="not_marked"&&( <>----
-                      <button onClick={()=>handleAttendance("attended",r._id,)}>attended</button>
-                      ------ <button onClick={()=>handleAttendance("absent",r._id,)}>absent</button>
-                      </> )
+    <main className="min-h-[calc(100vh-4.5rem)] bg-neutral-50 py-12 md:py-16">
+      <div className="mx-auto max-w-6xl px-6">
+        <Link
+          to="/dashboard"
+          className="text-sm font-medium text-neutral-600 hover:text-neutral-900"
+        >
+          ← Dashboard
+        </Link>
+
+        {loading && (
+          <p className="mt-8 text-center text-sm text-neutral-500">Loading…</p>
+        )}
+
+        {error && (
+          <p
+            className="mt-8 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+            role="alert"
+          >
+            {error}
+          </p>
+        )}
+
+        {!loading && event && (
+          <>
+            <div className="mt-6 flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h1 className="text-2xl font-bold text-neutral-900 md:text-3xl">
+                    {event.title}
+                  </h1>
+                  <StatusBadge status={event.status} />
+                </div>
+                <p className="mt-2 text-neutral-600">Manage registrations</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  className={btnPrimary}
+                  onClick={() =>
+                    navigate("/camera", {
+                      state: {
+                        returnTo: `/events/${eventId}/registrations`,
+                      },
+                    })
                   }
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
-    </>
+                >
+                  Scan QR check-in
+                </button>
+                {event.slug && (
+                  <Link to={`/event/${event.slug}`} className={btnOutline}>
+                    Public page
+                  </Link>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div className="rounded-xl border border-neutral-200 bg-white p-5">
+                <p className="text-sm text-neutral-500">Capacity</p>
+                <p className="mt-1 text-2xl font-bold text-neutral-900">
+                  {event.capacity}
+                </p>
+              </div>
+              <div className="rounded-xl border border-neutral-200 bg-white p-5">
+                <p className="text-sm text-neutral-500">Approved</p>
+                <p className="mt-1 text-2xl font-bold text-neutral-900">
+                  {approvedCount}
+                </p>
+              </div>
+              <div className="rounded-xl border border-neutral-200 bg-white p-5">
+                <p className="text-sm text-neutral-500">Seats remaining</p>
+                <p className="mt-1 text-2xl font-bold text-neutral-900">
+                  {seatsRemaining}
+                </p>
+                <div className="mt-3">
+                  <SeatsCounter
+                    capacity={event.capacity}
+                    seatsLeft={seatsRemaining}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <section className="mt-12">
+              <h2 className="text-xl font-bold text-neutral-900">
+                Registrations
+                <span className="ml-2 text-base font-normal text-neutral-500">
+                  ({registrations.length})
+                </span>
+              </h2>
+
+              {registrations.length === 0 ? (
+                <div className="mt-6 rounded-xl border border-neutral-200 bg-white p-8 text-center">
+                  <p className="text-neutral-600">No registrations yet.</p>
+                </div>
+              ) : (
+                <ul className="mt-6 space-y-4">
+                  {registrations.map((r) => (
+                    <li
+                      key={r._id}
+                      className="rounded-xl border border-neutral-200 bg-white p-5"
+                    >
+                      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="font-semibold text-neutral-900">
+                              {r.name}
+                            </p>
+                            <StatusBadge status={r.status} />
+                          </div>
+                          <p className="mt-1 text-sm text-neutral-600">
+                            {r.email} · {r.phone}
+                          </p>
+                          <p className="mt-1 text-sm text-neutral-500">
+                            Attendance:{" "}
+                            <span className="font-medium text-neutral-700">
+                              {attendanceLabel(r.attendanceStatus)}
+                            </span>
+                          </p>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2">
+                          {(r.status === "pending" ||
+                            r.status === "waitlisted" ||
+                            r.status === "rejected") && (
+                            <button
+                              type="button"
+                              className={btnSuccess}
+                              onClick={() => approve(r._id)}
+                            >
+                              Approve
+                            </button>
+                          )}
+                          {r.status !== "rejected" &&
+                            r.status !== "cancelled" &&
+                            r.attendanceStatus !== "attended" && (
+                              <button
+                                type="button"
+                                className={btnDanger}
+                                onClick={() => reject(r._id)}
+                              >
+                                Reject
+                              </button>
+                            )}
+                          {r.status === "approved" &&
+                            r.attendanceStatus === "not_marked" && (
+                              <>
+                                <button
+                                  type="button"
+                                  className={btnOutline}
+                                  onClick={() =>
+                                    markAttendance("attended", r._id)
+                                  }
+                                >
+                                  Mark attended
+                                </button>
+                                <button
+                                  type="button"
+                                  className={btnOutline}
+                                  onClick={() =>
+                                    markAttendance("absent", r._id)
+                                  }
+                                >
+                                  Mark absent
+                                </button>
+                              </>
+                            )}
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          </>
+        )}
+      </div>
+    </main>
   );
 }
 

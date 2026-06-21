@@ -1,234 +1,124 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import api from "../api/axios.js"
+import { Link, useParams, useNavigate } from "react-router-dom";
+import api from "../api/axios.js";
+import StatusBadge from "../components/StatusBadge.jsx";
+import EventFormFields, {
+  buildEventPayload,
+  handleEventFormChange,
+  initialEventFormData,
+} from "../components/EventFormFields.jsx";
 
+function EditEvent() {
+  const navigate = useNavigate();
+  const { event_ID } = useParams();
+  const [event, setEvent] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [formData, setFormData] = useState(initialEventFormData);
 
-function EditEvent(){
-    const navigate = useNavigate();
-    const [event, setEvent] = useState();
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
-    const [submitting, setSubmitting] = useState(false); // save button
+  useEffect(() => {
+    setLoading(true);
+    setEvent(null);
+    setError("");
+    (async () => {
+      try {
+        const res = await api.get(`/api/events/my/event/${event_ID}`);
+        const found = res.data.event;
 
-    const [formData, setFormData] = useState({
-        title: "",
-        description: "",
-        category: "Tech",
-        date: "",
-        startTime: "",
-        endTime: "",
-        eventType: "offline",
-        capacity: "",
-        bannerImage: "",
-        registrationMode: "auto",
-        venue: { name: "", address: "", mapLink: "" },
-        online: { platform: "", meetingLink: "" },
-    });
-
-    let {event_ID} = useParams();
-    useEffect(()=>{
-        setLoading(true);
-        setEvent(null)
-        setError("");
-        (async ()=>{
-            try{
-                const res = await api.get("/api/events/my/events");
-               const found = res.data.eventdetails.find(e =>String(e._id) === event_ID)
-
-               if(found){ 
-                 setEvent(found);
-                setFormData({
-                    title: found.title,
-                    description: found.description,
-                    category: found.category,
-                    date: found.date?.slice(0, 10),   
-                    startTime: found.startTime,
-                    endTime: found.endTime,
-                    eventType: found.eventType,
-                    capacity: found.capacity,
-                    bannerImage: found.bannerImage || "",
-                    registrationMode: found.registrationMode || "auto",
-                    venue: found.venue || { name: "", address: "", mapLink: "" },
-                    online: found.online || { platform: "", meetingLink: "" },
-                  });
-               } else{
-                setError("event not found")
-               }
-             
-            }
-            catch (error){
-                setError(error.response?.data?.message || "Cannot get event")
-            }finally {
-
-                
-                setLoading(false)
-            }
-        })()
-    },[event_ID])
-
-    async function handleSubmit(e) {
-        e.preventDefault();
-        setError("");
-        setSubmitting(true)
-        try {
-            const payload = {...formData};
-            if(!payload.bannerImage){
-                delete payload.bannerImage;
-            }
-
-            if(payload.eventType ==="online"){
-                delete payload.venue;
-            }
-            else{
-                delete payload.online
-            }
-            const res = await api.put(`/api/events/${event_ID}`, payload)
-            if (res) {
-                navigate("/dashboard/");
-            }
-        } catch (error) {
-            setError(error.response?.data?.message || "unable to edit event")
-        } finally {
-            setSubmitting(false)
+        if (found) {
+          setEvent(found);
+          setFormData({
+            title: found.title,
+            description: found.description,
+            category: found.category,
+            date: found.date?.slice(0, 10),
+            startTime: found.startTime,
+            endTime: found.endTime,
+            eventType: found.eventType,
+            capacity: found.capacity,
+            bannerImage: found.bannerImage || "",
+            registrationMode: found.registrationMode || "auto",
+            venue: found.venue || { name: "", address: "", mapLink: "" },
+            online: found.online || { platform: "", meetingLink: "" },
+          });
+        } else {
+          setError("Event not found");
         }
+      } catch (err) {
+        setError(err.response?.data?.message || "Cannot load event");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [event_ID]);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError("");
+    setSubmitting(true);
+    try {
+      const res = await api.put(
+        `/api/events/${event_ID}`,
+        buildEventPayload(formData),
+      );
+      if (res) {
+        navigate("/dashboard");
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || "Unable to save changes");
+    } finally {
+      setSubmitting(false);
     }
+  }
 
-    function handleChange(e) {
-        const { name, value } = e.target;
+  function handleChange(e) {
+    handleEventFormChange(formData, setFormData, e);
+  }
 
-        if (name.startsWith("venue.")) {
-            const key = name.split(".")[1];
-            setFormData({
-                ...formData,
-                venue: {
-                    ...formData.venue,
-                    [key]: value
-                }
-            })
-            return;
-        }
+  return (
+    <main className="min-h-[calc(100vh-4.5rem)] bg-neutral-50 py-12 md:py-16">
+      <div className="mx-auto max-w-2xl px-6">
+        <Link
+          to="/dashboard"
+          className="text-sm font-medium text-neutral-600 hover:text-neutral-900"
+        >
+          ← Dashboard
+        </Link>
 
-        if (name.startsWith("online.")) {
-            const key = name.split(".")[1];
-            setFormData({
-                ...formData,
-                online: {
-                    ...formData.online,
-                    [key]: value
-                }
-            })
-            return;
-        }
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <h1 className="text-3xl font-bold text-neutral-900">Edit event</h1>
+          {event?.status && <StatusBadge status={event.status} />}
+        </div>
 
-        setFormData({
-            ...formData,
-            [name]: value
-        })
-    }
-    return <>
-  <form onSubmit={handleSubmit}>
-            <input type="text" name="title" value={formData.title} onChange={handleChange} placeholder="name" />
-            <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                placeholder="Description (min 50 characters)"
-                rows={4}
+        {loading && (
+          <p className="mt-8 text-sm text-neutral-500">Loading event…</p>
+        )}
+
+        {error && !event && !loading && (
+          <p
+            className="mt-8 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+            role="alert"
+          >
+            {error}
+          </p>
+        )}
+
+        {!loading && event && (
+          <div className="mt-8 rounded-xl border border-neutral-200 bg-white p-6 md:p-8">
+            <EventFormFields
+              formData={formData}
+              onChange={handleChange}
+              onSubmit={handleSubmit}
+              submitting={submitting}
+              error={error}
+              submitLabel="Save changes"
             />
-
-            <select name="category" value={formData.category} onChange={handleChange}>
-                <option value="Tech">Tech</option>
-                <option value="Business">Business</option>
-                <option value="Education">Education</option>
-                <option value="Arts">Arts</option>
-                <option value="Sports">Sports</option>
-                <option value="Other">Other</option>
-            </select>
-
-
-            <input type="date" name="date" value={formData.date} onChange={handleChange} />
-            <input type="time" name="startTime" value={formData.startTime} onChange={handleChange} />
-            <input type="time" name="endTime" value={formData.endTime} onChange={handleChange} />
-
-
-            <select name="eventType" value={formData.eventType} onChange={handleChange}>
-                <option value="offline">Offline</option>
-                <option value="online">Online</option>
-            </select>
-
-            <input
-                type="url"
-                name="bannerImage"
-                value={formData.bannerImage}
-                onChange={handleChange}
-                placeholder="Banner image URL (optional)"
-            />
-            <input
-                type="number"
-                name="capacity"
-                min="1"
-                value={formData.capacity}
-                onChange={handleChange}
-                placeholder="Capacity"
-            />
-            <select
-  name="registrationMode"
-  value={formData.registrationMode}
-  onChange={handleChange}
->
-  <option value="auto">Auto approval</option>
-  <option value="manual">Manual approval</option>
-</select>
-
-
-            {formData.eventType === "offline" && (
-                <>
-                    <input
-                        type="text"
-                        name="venue.name"
-                        value={formData.venue.name}
-                        onChange={handleChange}
-                        placeholder="Venue name *"
-                    />
-                    <input
-                        type="text"
-                        name="venue.address"
-                        value={formData.venue.address}
-                        onChange={handleChange}
-                        placeholder="Venue address"
-                    />
-                    <input
-                        type="url"
-                        name="venue.mapLink"
-                        value={formData.venue.mapLink}
-                        onChange={handleChange}
-                        placeholder="Google Maps link"
-                    />
-                </>
-            )}
-
-
-            {formData.eventType === "online" && (
-                <>
-                    <input
-                        type="text"
-                        name="online.platform"
-                        value={formData.online.platform}
-                        onChange={handleChange}
-                        placeholder="Platform (Zoom, Meet, etc.)"
-                    />
-                    <input
-                        type="url"
-                        name="online.meetingLink"
-                        value={formData.online.meetingLink}
-                        onChange={handleChange}
-                        placeholder="Meeting link *"
-                    />
-                </>
-            )}
-            <button type="submit" disabled={submitting}>submit</button> <br />
-            {error && <p className="text-red-500">{error}</p>}
-        </form>
-    </>
+          </div>
+        )}
+      </div>
+    </main>
+  );
 }
-export default EditEvent
+
+export default EditEvent;

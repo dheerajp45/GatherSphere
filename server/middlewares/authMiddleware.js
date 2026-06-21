@@ -15,7 +15,7 @@ function authMiddleware(req,res,next){
     })
     }
     const actual_token = received_token.slice(7)
-    // console.log(token);
+
     
     try {
         const decoded = jwt.verify(actual_token,JWT_SECRET)
@@ -45,7 +45,7 @@ function optionalAuth(req,res,next){
     })
     }
     const actual_token = received_token.slice(7)
-    // console.log(token);
+ 
     
     try {
         const decoded = jwt.verify(actual_token,JWT_SECRET)

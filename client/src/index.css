@@ -1,1 +1,28 @@
 @import "tailwindcss";
+
+/* QR scanner — tame html5-qrcode default UI */
+.qr-viewfinder {
+  width: 100%;
+  min-height: 280px;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  background: #171717;
+}
+
+.qr-viewfinder video {
+  width: 100% !important;
+  height: auto !important;
+  display: block;
+  border-radius: 0.75rem;
+  object-fit: cover;
+}
+
+.qr-scanner-wrap #qr-shaded-region {
+  border-width: 3px !important;
+  border-color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.qr-scanner-wrap #qr-shaded-region::before,
+.qr-scanner-wrap #qr-shaded-region::after {
+  border-color: rgba(255, 255, 255, 0.85) !important;
+}

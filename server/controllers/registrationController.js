@@ -2,9 +2,22 @@ import { Registration } from "../models/registration.js";
 import { Event } from "../models/event.js";
 import { isValidObjectId } from "../utils/isValidObjectId.js";
 import { eventHostValidation } from "../utils/eventHostValidation.js";
-import {sendEmail} from "../utils/email.js"
-import {issueTicket} from "../utils/ticket.js"
-const APPROVABLE = ["pending", "waitlisted","rejected"];
+import { sendEmail } from "../utils/email.js";
+import {
+  registrationReceivedEmail,
+  registrationApprovedEmail,
+  registrationRejectedEmail,
+  registrationCancelledEmail,
+  registrationsClosedEmail,
+} from "../utils/emailTemplates.js";
+import { issueTicket } from "../utils/ticket.js";
+import { FRONTEND_URL } from "../config/env.js";
+
+const APPROVABLE = ["pending", "waitlisted", "rejected"];
+
+function ticketLink(ticketToken) {
+    return `${FRONTEND_URL}/ticket/${ticketToken}`;
+}
 
 async function registerForEvent(eventId, data, userId,userMail) {
     if (!isValidObjectId(eventId)) {
@@ -63,17 +76,15 @@ async function registerForEvent(eventId, data, userId,userMail) {
             update,
             { new: true }
         );
-        if(updated){
-            let text = "Registration received for the event.";
-if (updated.status === "approved" && updated.ticketToken) {
-  text += `\nYour ticket: http://localhost:5173/ticket/${updated.ticketToken}`;
-}
-            const emailBody={
-                to:updated.email,
-                subject:"registration received again",
-                 text
-            }
-            await sendEmail(emailBody)
+        if (updated) {
+            await sendEmail({
+                to: updated.email,
+                ...registrationReceivedEmail({
+                    eventTitle: event.title,
+                    status: updated.status,
+                    ticketUrl: updated.ticketToken ? ticketLink(updated.ticketToken) : null,
+                }),
+            });
         }
 
         return {
@@ -100,17 +111,15 @@ if (updated.status === "approved" && updated.ticketToken) {
     }
 
     const newRegistration = await Registration.create(registrationData);
-    if(newRegistration){
-        let text = "Registration received for the event.";
-if (newRegistration.status === "approved" && newRegistration.ticketToken) {
-  text += `\nYour ticket: http://localhost:5173/ticket/${newRegistration.ticketToken}`;
-}
-        const emailBody={
-            to:registrationData.email,
-            subject:"registration received",
-                             text
-        }
-        await sendEmail(emailBody)
+    if (newRegistration) {
+        await sendEmail({
+            to: registrationData.email,
+            ...registrationReceivedEmail({
+                eventTitle: event.title,
+                status: newRegistration.status,
+                ticketUrl: newRegistration.ticketToken ? ticketLink(newRegistration.ticketToken) : null,
+            }),
+        });
     }
     return {
         ok: true,
@@ -173,13 +182,12 @@ async function cancelRegistration(registrationId, email) {
         checkInMethod: null,
         attendanceStatus: "not_marked",
     }, { new: true });
-    if(updated){
-        const emailBody={
-            to:registration.email,
-            subject:"registration cancelled",
-            text:"Registration for the event cancelled"
-        }
-        await sendEmail(emailBody)
+    if (updated) {
+        const event = await Event.findById(registration.event);
+        await sendEmail({
+            to: registration.email,
+            ...registrationCancelledEmail({ eventTitle: event?.title ?? "the event" }),
+        });
     }
     await promoteFromWaitlist(registration.event);
 
@@ -187,10 +195,26 @@ async function cancelRegistration(registrationId, email) {
 }
 
 async function closeUnresolvedRegistrations(eventId) {
+    const event = await Event.findById(eventId);
+    const unresolved = await Registration.find({
+        event: eventId,
+        status: { $in: ["pending", "waitlisted"] },
+    });
+
+    if (unresolved.length === 0) return;
+
     await Registration.updateMany(
         { event: eventId, status: { $in: ["pending", "waitlisted"] } },
         { $set: { status: "rejected" } }
     );
+
+    const eventTitle = event?.title ?? "the event";
+    for (const reg of unresolved) {
+        await sendEmail({
+            to: reg.email,
+            ...registrationsClosedEmail({ eventTitle }),
+        });
+    }
 }
 
 async function approveRegistration(registrationId, hostId) {
@@ -228,15 +252,14 @@ async function approveRegistration(registrationId, hostId) {
         { new: true }
     );
     
-    if(updated){
-
-        const emailBody={
-            to:reg.email,
-            subject:"registration approved",
-                 text:`you have been approved for the event ,
-                 Your ticket: http://localhost:5173/ticket/${updated.ticketToken}`
-        }
-        await sendEmail(emailBody)
+    if (updated) {
+        await sendEmail({
+            to: reg.email,
+            ...registrationApprovedEmail({
+                eventTitle: event.title,
+                ticketUrl: ticketLink(updated.ticketToken),
+            }),
+        });
     }
     return {
         ok: true,
@@ -262,18 +285,18 @@ async function rejectRegistration(registrationId, hostId) {
         return { ok: false, status: 403, message: "Not authorized" };
     }
 
+    const event = await Event.findById(reg.event);
+
     const updated = await Registration.findByIdAndUpdate(
         registrationId,
         { status: "rejected" },
         { new: true }
     );
-    if(updated){
-        const emailBody={
-            to:reg.email,
-            subject:"registration rejected",
-            text:"Registration for the event rejected"
-        }
-        await sendEmail(emailBody)
+    if (updated) {
+        await sendEmail({
+            to: reg.email,
+            ...registrationRejectedEmail({ eventTitle: event?.title ?? "the event" }),
+        });
     }
 
     return {
@@ -305,15 +328,15 @@ async function promoteFromWaitlist(eventId) {
     }
 
     const updated = await Registration.findByIdAndUpdate(oldest._id, { status: "approved", ...issueTicket() }, { new: true });
-    if(updated){
-
-        const emailBody={
-            to:oldest.email,
-            subject:"registration approved",
-                            text:`you have been approved for the event ,
-                 Your ticket: http://localhost:5173/ticket/${updated.ticketToken}`
-        }
-        await sendEmail(emailBody)
+    if (updated) {
+        await sendEmail({
+            to: oldest.email,
+            ...registrationApprovedEmail({
+                eventTitle: event.title,
+                ticketUrl: ticketLink(updated.ticketToken),
+                fromWaitlist: true,
+            }),
+        });
     }
     return {
         status: 200,

@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react"
+import { setUnauthorizedHandler } from "../api/axios.js"
 
 const AuthContext = createContext(null)
 
@@ -20,14 +21,21 @@ function AuthProvider({ children }) {
     }
 
 
-    useEffect(()=>{
-        const savedToken = localStorage.getItem("token");
+    useEffect(() => {
+        const savedToken = localStorage.getItem("token")
         const savedUser = localStorage.getItem("user")
-        if(savedToken&&savedUser){
-            setToken(savedToken);
+        if (savedToken && savedUser) {
+            setToken(savedToken)
             setUser(JSON.parse(savedUser))
         }
-    },[])
+    }, [])
+
+    useEffect(() => {
+        setUnauthorizedHandler(() => {
+            setToken(null)
+            setUser(null)
+        })
+    }, [])
     function logout() {
         localStorage.removeItem("token");
         localStorage.removeItem("user");

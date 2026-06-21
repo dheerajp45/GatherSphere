@@ -8,6 +8,7 @@ import DashBoard from './pages/DashBoard';
 import CreateEvent from './pages/CreateEvent';
 import EditEvent from './pages/EditEvent';
 import ProtectedRoute from './components/ProtectedRoute';
+import GuestRoute from './components/GuestRoute';
 import Navbar from './components/Navbar';
 import TicketPage from './pages/TicketPage';
 import  ManageRegistrationsPage from './pages/ManageRegistrationsPage';
@@ -20,10 +21,26 @@ function App() {
     <BrowserRouter>
     <Navbar />
 <Routes>
-  <Route path="/camera" element={<Camera></Camera>}></Route>
-  <Route path="/" element={<Home></Home>}></Route>
-  <Route path='/login' element={<LoginPage></LoginPage>}></Route>
-  <Route path='/register' element={<RegisterPage></RegisterPage>}></Route>
+  <Route path="/camera" element={
+     <ProtectedRoute>
+    <Camera></Camera>
+     </ProtectedRoute>
+   }></Route>
+  <Route path="/" element={
+    <GuestRoute>
+      <Home></Home>
+    </GuestRoute>
+  }></Route>
+  <Route path='/login' element={
+    <GuestRoute>
+      <LoginPage></LoginPage>
+    </GuestRoute>
+  }></Route>
+  <Route path='/register' element={
+    <GuestRoute>
+      <RegisterPage></RegisterPage>
+    </GuestRoute>
+  }></Route>
   <Route path='/eventlisting' element={<EventListingPage></EventListingPage>}></Route>
 
 <Route path="/events/:eventId/registrations" element={
@@ -33,6 +50,11 @@ function App() {
 }></Route>
 
 
+  <Route path='/dashboard' element={
+    <ProtectedRoute>
+    <DashBoard></DashBoard>
+    </ProtectedRoute>
+    }></Route>
   <Route path='/dashboard/' element={
     <ProtectedRoute>
     <DashBoard></DashBoard>

@@ -1,27 +1,55 @@
 import nodemailer from "nodemailer";
+import { EMAIL, APP_PASSWORD } from "../config/env.js";
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL,
-    pass: process.env.APP_PASSWORD
+const isEmailConfigured = Boolean(EMAIL && APP_PASSWORD);
+
+let transporter = null;
+
+if (isEmailConfigured) {
+  transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: EMAIL,
+      pass: APP_PASSWORD,
+    },
+  });
+} else {
+  console.warn(
+    "[email] EMAIL or APP_PASSWORD missing in .env — outgoing emails will be skipped"
+  );
+}
+
+async function sendEmail({ to, subject, text, html }) {
+  if (!isEmailConfigured) {
+    console.warn(`[email] skipped (not configured): "${subject}" → ${to}`);
+    return { ok: false, skipped: true };
   }
-});
 
-async function sendEmail(emailBody) {
-    const {to,subject,text} = emailBody
   try {
     const info = await transporter.sendMail({
-      from: process.env.EMAIL,
-      to:to,
-      subject:subject,
-      text:text
+      from: EMAIL,
+      to,
+      subject,
+      text,
+      ...(html ? { html } : {}),
     });
-
-    console.log(info);
+    console.log(`[email] sent "${subject}" → ${to} (${info.messageId})`);
+    return { ok: true, messageId: info.messageId };
   } catch (error) {
-    console.log(error);
+    console.error(`[email] failed "${subject}" → ${to}:`, error.message);
+    return { ok: false, error: error.message };
   }
 }
 
-export {sendEmail}
+async function verifyEmailTransport() {
+  if (!isEmailConfigured) return;
+
+  try {
+    await transporter.verify();
+    console.log("[email] SMTP connection ready");
+  } catch (error) {
+    console.error("[email] SMTP verification failed:", error.message);
+  }
+}
+
+export { sendEmail, verifyEmailTransport, isEmailConfigured };
