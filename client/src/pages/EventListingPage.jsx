@@ -101,9 +101,7 @@ function EventListingPage() {
                 className="overflow-hidden rounded-xl border border-neutral-200 bg-white transition-shadow hover:shadow-md"
               >
                 <EventBanner
-                  bannerImage={event.bannerImage}
                   fallbackClassName={CARD_ACCENTS[index % CARD_ACCENTS.length]}
-                  alt={event.title}
                   className="h-40 w-full"
                 />
                 <div className="space-y-2 p-4">

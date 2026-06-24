@@ -29,7 +29,7 @@ async function  totalRegistrationsDone(hostId){
         status:{$in:["approved", "pending","waitlisted",]}
     })
     return count;
-}
+} 
 async function getMyRegistrations(userId) {
     const myRegistrations=await Registration.find({userId:userId}).populate("event");
     return myRegistrations

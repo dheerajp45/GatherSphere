@@ -13,7 +13,6 @@ function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [profilePicture, setProfilePicture] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -26,7 +25,6 @@ function RegisterPage() {
         name,
         email,
         password,
-        profilePicture,
       });
       if (res) {
         login(res.data.token, res.data.user);
@@ -94,21 +92,6 @@ function RegisterPage() {
           />
         </div>
 
-        <div>
-          <label htmlFor="register-photo" className={authLabelClass}>
-            Profile picture URL{" "}
-            <span className="font-normal text-neutral-400">(optional)</span>
-          </label>
-          <input
-            id="register-photo"
-            type="url"
-            value={profilePicture}
-            onChange={(e) => setProfilePicture(e.target.value)}
-            placeholder="https://…"
-            className={authInputClass}
-          />
-        </div>
-
         {error && (
           <p className="text-sm text-red-600" role="alert">
             {error}
@@ -118,17 +101,17 @@ function RegisterPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-lg bg-black px-4 py-2.5 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50"
+          className="inline-flex items-center justify-center w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-indigo-700 shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? "Creating account…" : "Create account"}
+          {loading && <svg className="mr-2 h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>}{loading ? "Creating account…" : "Create account"}
         </button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-neutral-600">
+      <p className="mt-6 text-center text-sm text-slate-600">
         Already have an account?{" "}
         <Link
           to="/login"
-          className="font-medium text-neutral-900 underline hover:text-neutral-700"
+          className="font-medium text-slate-900 underline hover:text-slate-700"
         >
           Log in
         </Link>

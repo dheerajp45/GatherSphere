@@ -91,9 +91,7 @@ function EventDetailPage() {
           <div className="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-3">
             <div className="lg:col-span-2">
               <EventBanner
-                bannerImage={event.bannerImage}
                 fallbackClassName="bg-neutral-200"
-                alt={event.title}
                 className="h-48 w-full rounded-xl md:h-64"
               />
 

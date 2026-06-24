@@ -131,39 +131,39 @@ function Camera() {
   }
 
   return (
-    <main className="min-h-[calc(100vh-4.5rem)] bg-neutral-50 py-12 md:py-16">
+    <main className="min-h-[calc(100vh-4.5rem)] bg-slate-50 py-12 md:py-16">
       <div className="mx-auto max-w-md px-6">
         <button
           type="button"
           onClick={() => navigate(returnTo)}
-          className="text-sm font-medium text-neutral-600 hover:text-neutral-900"
+          className="text-sm font-medium text-slate-600 hover:text-slate-900"
         >
           ← {returnLabel}
         </button>
 
-        <h1 className="mt-4 text-2xl font-bold text-neutral-900">QR check-in</h1>
-        <p className="mt-2 text-sm text-neutral-600">
+        <h1 className="mt-4 text-2xl font-bold text-slate-900">QR check-in</h1>
+        <p className="mt-2 text-sm text-slate-600">
           Point the camera at the attendee&apos;s ticket QR code.
         </p>
 
-        <div className="mt-8 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
-          <div className="border-b border-neutral-100 bg-neutral-900 px-4 py-3 text-center">
-            <p className="text-xs font-medium uppercase tracking-wide text-neutral-400">
+        <div className="mt-8 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-100 bg-gradient-to-r from-indigo-600 to-indigo-800 px-4 py-3 text-center">
+            <p className="text-xs font-medium uppercase tracking-wide text-indigo-200">
               Scanner
             </p>
             {!scannerReady && !cameraError && (
-              <p className="mt-1 text-sm text-neutral-300">Starting camera…</p>
+              <p className="mt-1 text-sm text-indigo-100">Starting camera…</p>
             )}
             {scannerReady && (
-              <p className="mt-1 text-sm text-green-400">Camera ready</p>
+              <p className="mt-1 text-sm text-emerald-300">Camera ready</p>
             )}
           </div>
 
           <div className="qr-scanner-wrap p-4">
             {cameraError ? (
-              <div className="flex min-h-[280px] flex-col items-center justify-center rounded-lg bg-neutral-100 px-4 text-center">
+              <div className="flex min-h-[280px] flex-col items-center justify-center rounded-lg bg-slate-100 px-4 text-center">
                 <p className="text-sm text-red-700">{cameraError}</p>
-                <p className="mt-2 text-xs text-neutral-500">
+                <p className="mt-2 text-xs text-slate-500">
                   Use upload below if camera access is blocked.
                 </p>
               </div>
@@ -172,7 +172,7 @@ function Camera() {
             )}
           </div>
 
-          <div className="border-t border-neutral-100 px-4 py-4">
+          <div className="border-t border-slate-100 px-4 py-4">
             <input
               ref={fileInputRef}
               type="file"
@@ -184,9 +184,9 @@ function Camera() {
               type="button"
               disabled={fileScanning || !canUpload}
               onClick={() => fileInputRef.current?.click()}
-              className="w-full rounded-lg border border-neutral-300 bg-white px-4 py-2.5 text-sm font-medium text-neutral-800 hover:bg-neutral-50 disabled:opacity-50"
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50 transition-colors disabled:cursor-not-allowed"
             >
-              {fileScanning ? "Reading image…" : "Upload QR image instead"}
+              <span className="inline-flex items-center">{fileScanning && <svg className="mr-2 h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>}{fileScanning ? "Reading image…" : "Upload QR image instead"}</span>
             </button>
           </div>
         </div>
@@ -204,7 +204,7 @@ function Camera() {
           </div>
         )}
 
-        <p className="mt-6 text-center text-xs text-neutral-500">
+        <p className="mt-6 text-center text-xs text-slate-500">
           Tip: hold steady inside the square. Each scan pauses briefly before the
           next.
         </p>

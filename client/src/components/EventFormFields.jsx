@@ -1,7 +1,7 @@
 import { authInputClass, authLabelClass } from "./AuthPageShell.jsx";
 
 const selectClass = `${authInputClass} bg-white`;
-const sectionTitle = "text-sm font-semibold uppercase tracking-wide text-neutral-500";
+const sectionTitle = "text-sm font-semibold uppercase tracking-wide text-slate-500";
 
 const CATEGORIES = [
   "Tech",
@@ -74,21 +74,6 @@ function EventFormFields({
             ))}
           </select>
         </div>
-        <div>
-          <label htmlFor="bannerImage" className={authLabelClass}>
-            Banner image URL{" "}
-            <span className="font-normal text-neutral-400">(optional)</span>
-          </label>
-          <input
-            id="bannerImage"
-            type="url"
-            name="bannerImage"
-            value={formData.bannerImage}
-            onChange={onChange}
-            placeholder="https://…"
-            className={authInputClass}
-          />
-        </div>
       </section>
 
       <section className="space-y-4">
@@ -159,7 +144,7 @@ function EventFormFields({
         </div>
 
         {formData.eventType === "offline" && (
-          <div className="space-y-4 rounded-xl border border-neutral-200 bg-neutral-50 p-4">
+          <div className="space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
             <div>
               <label htmlFor="venue-name" className={authLabelClass}>
                 Venue name
@@ -207,7 +192,7 @@ function EventFormFields({
         )}
 
         {formData.eventType === "online" && (
-          <div className="space-y-4 rounded-xl border border-neutral-200 bg-neutral-50 p-4">
+          <div className="space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
             <div>
               <label htmlFor="online-platform" className={authLabelClass}>
                 Platform
@@ -284,13 +269,13 @@ function EventFormFields({
         </p>
       )}
 
-      <div className="flex flex-wrap gap-3 border-t border-neutral-200 pt-6">
+      <div className="flex flex-wrap gap-3 border-t border-slate-200 pt-6">
         <button
           type="submit"
           disabled={submitting}
-          className="rounded-lg bg-black px-6 py-2.5 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50"
+          className="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {submitting ? "Saving…" : submitLabel}
+          {submitting && <svg className="mr-2 h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>}{submitting ? "Saving…" : submitLabel}
         </button>
       </div>
     </form>
@@ -306,7 +291,6 @@ export const initialEventFormData = {
   endTime: "",
   eventType: "offline",
   capacity: "",
-  bannerImage: "",
   registrationMode: "auto",
   venue: { name: "", address: "", mapLink: "" },
   online: { platform: "", meetingLink: "" },
@@ -314,9 +298,6 @@ export const initialEventFormData = {
 
 export function buildEventPayload(formData) {
   const payload = { ...formData };
-  if (!payload.bannerImage) {
-    delete payload.bannerImage;
-  }
   if (payload.eventType === "online") {
     delete payload.venue;
   } else {

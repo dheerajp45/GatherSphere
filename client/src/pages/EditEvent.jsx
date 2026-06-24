@@ -37,7 +37,6 @@ function EditEvent() {
             endTime: found.endTime,
             eventType: found.eventType,
             capacity: found.capacity,
-            bannerImage: found.bannerImage || "",
             registrationMode: found.registrationMode || "auto",
             venue: found.venue || { name: "", address: "", mapLink: "" },
             online: found.online || { platform: "", meetingLink: "" },

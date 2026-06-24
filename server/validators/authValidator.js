@@ -10,12 +10,6 @@ const registerSchema = z.object({
     password:z
     .string()
     .min(6,{message:"password must be at least 6 characters"}),
-    profilePicture: z
-    .union(
-        [z.literal(""),
-            z.url({ error: "profile picture must be a valid URL"})
-        ]
-    ).optional()
 })
  const loginSchema =z.object({
     email: z

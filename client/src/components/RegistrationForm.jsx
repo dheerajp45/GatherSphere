@@ -44,12 +44,15 @@ function RegistrationForm({ eventId }) {
 
   if (status) {
     return (
-      <div className="rounded-lg border border-green-200 bg-green-50 p-4">
-        <p className="text-sm font-medium text-neutral-900">
+      <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+        <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100">
+          <svg className="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+        </div>
+        <p className="text-sm font-medium text-slate-900">
           Registration submitted
         </p>
         <div className="mt-2 flex flex-wrap items-center gap-2">
-          <span className="text-sm text-neutral-600">Status:</span>
+          <span className="text-sm text-slate-600">Status:</span>
           <StatusBadge status={status} />
         </div>
       </div>
@@ -109,7 +112,7 @@ function RegistrationForm({ eventId }) {
       <div>
         <label htmlFor="reg-org" className={authLabelClass}>
           Organization{" "}
-          <span className="font-normal text-neutral-400">(optional)</span>
+          <span className="font-normal text-slate-400">(optional)</span>
         </label>
         <input
           id="reg-org"
@@ -131,9 +134,9 @@ function RegistrationForm({ eventId }) {
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-lg bg-black px-4 py-2.5 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50"
+        className="inline-flex items-center justify-center w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-indigo-700 shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {loading ? "Submitting…" : "Register"}
+        {loading && <svg className="mr-2 h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>}{loading ? "Submitting…" : "Register"}
       </button>
     </form>
   );

@@ -25,8 +25,6 @@ const createEventSchema = z.object({
     .iso.date().optional(),
     registrationMode:z
     .enum(["auto","manual"]).optional(),
-    bannerImage:z
-    .url().optional(),
     venue: z.object({
         name: z.string(),
         address: z.string(),
