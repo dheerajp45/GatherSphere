@@ -4,8 +4,8 @@ import { useAuth } from "../context/AuthContext";
 
 function navLinkClass(active) {
   return active
-    ? "text-sm font-medium text-neutral-900"
-    : "text-sm font-medium text-neutral-600 hover:text-neutral-900";
+    ? "text-sm font-semibold text-white"
+    : "text-sm font-medium text-zinc-400 hover:text-white transition-colors duration-200";
 }
 
 function Navbar() {
@@ -47,7 +47,7 @@ function Navbar() {
       </Link>
       <Link
         to="/register"
-        className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800"
+        className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-500 transition-colors shadow-lg shadow-violet-600/20"
         onClick={closeMenu}
       >
         Create account
@@ -57,7 +57,9 @@ function Navbar() {
 
   const authLinks = (
     <>
-      <span className="text-sm text-neutral-600">Hi, {user?.name}</span>
+      <span className="text-sm text-zinc-400">
+        Hi, <span className="font-semibold text-zinc-200">{user?.name}</span>
+      </span>
       <Link
         to="/eventlisting"
         className={navLinkClass(isBrowseActive)}
@@ -76,7 +78,7 @@ function Navbar() {
       <button
         type="button"
         onClick={handleLogOut}
-        className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-800 hover:bg-neutral-50"
+        className="rounded-lg border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
       >
         Logout
       </button>
@@ -84,11 +86,11 @@ function Navbar() {
   );
 
   return (
-    <header className="border-b border-neutral-200 bg-white">
+    <header className="sticky top-0 z-50 glass-panel border-b border-zinc-800/80">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4">
         <Link
           to={logoPath}
-          className="text-lg font-bold text-neutral-900"
+          className="font-display text-xl font-bold text-gradient"
           onClick={closeMenu}
         >
           GatherSphere
@@ -103,7 +105,7 @@ function Navbar() {
 
         <button
           type="button"
-          className="rounded-lg border border-neutral-300 p-2 text-neutral-700 md:hidden"
+          className="rounded-lg border border-zinc-700 p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors md:hidden"
           aria-label={menuOpen ? "Close menu" : "Open menu"}
           aria-expanded={menuOpen}
           onClick={() => setMenuOpen((open) => !open)}
@@ -131,7 +133,7 @@ function Navbar() {
       {menuOpen && (
         <nav
           aria-label="Mobile navigation"
-          className="flex flex-col gap-4 border-t border-neutral-200 px-6 py-4 md:hidden"
+          className="flex flex-col gap-4 border-t border-zinc-800 px-6 py-4 md:hidden bg-zinc-950/95 backdrop-blur-md"
         >
           {token ? authLinks : guestLinks}
         </nav>

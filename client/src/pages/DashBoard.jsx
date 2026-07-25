@@ -4,11 +4,11 @@ import api from "../api/axios.js";
 import StatusBadge from "../components/StatusBadge.jsx";
 
 const btnOutline =
-  "inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
+  "inline-flex items-center rounded-lg border border-zinc-700 bg-zinc-900/50 px-3 py-1.5 text-sm font-medium text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
 const btnPrimary =
-  "inline-flex items-center rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
+  "inline-flex items-center rounded-lg bg-violet-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm shadow-violet-600/20 hover:bg-violet-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
 const btnDanger =
-  "inline-flex items-center rounded-lg border border-red-200 bg-white px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
+  "inline-flex items-center rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-sm font-medium text-red-400 hover:bg-red-500/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
 
 function formatEventDate(date) {
   if (!date) return "";
@@ -19,11 +19,14 @@ function formatEventDate(date) {
   });
 }
 
-function StatCard({ label, value, accent }) {
+function StatCard({ label, value, accent, icon }) {
   return (
-    <div className={`rounded-xl border border-slate-200 bg-white p-6 border-l-4 ${accent}`}>
-      <p className="text-sm text-slate-500">{label}</p>
-      <p className="mt-1 text-3xl font-bold text-slate-900">{value ?? 0}</p>
+    <div className={`rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6 border-l-4 ${accent}`}>
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-zinc-500">{label}</p>
+        {icon && <div className="text-zinc-600">{icon}</div>}
+      </div>
+      <p className="mt-2 font-display text-3xl font-bold text-white">{value ?? 0}</p>
     </div>
   );
 }
@@ -114,16 +117,23 @@ function DashBoard() {
     }
   }
 
+  const spinner = (
+    <svg className="mr-2 h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+    </svg>
+  );
+
   return (
-    <main className="min-h-[calc(100vh-4.5rem)] bg-slate-50 py-12 md:py-16">
+    <main className="min-h-[calc(100vh-4.5rem)] bg-zinc-950 py-12 md:py-20">
       <div className="mx-auto max-w-6xl px-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
+            <p className="text-sm font-semibold uppercase tracking-widest text-violet-400">
               Your hub
             </p>
-            <h1 className="mt-2 text-3xl font-bold text-slate-900">Dashboard</h1>
-            <p className="mt-2 text-slate-600">
+            <h1 className="mt-2 font-display text-3xl font-bold text-white">Dashboard</h1>
+            <p className="mt-2 text-zinc-400">
               Manage events you host and registrations you&apos;ve made.
             </p>
           </div>
@@ -133,12 +143,14 @@ function DashBoard() {
         </div>
 
         {loading && (
-          <p className="mt-12 text-center text-sm text-slate-500">Loading…</p>
+          <div className="mt-16 flex justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-700 border-t-violet-500"></div>
+          </div>
         )}
 
         {error && (
           <p
-            className="mt-8 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+            className="mt-8 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400"
             role="alert"
           >
             {error}
@@ -148,7 +160,7 @@ function DashBoard() {
         {!loading && !error && (
           <>
             <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <StatCard label="Events hosted" value={stats?.eventsHosted} accent="border-l-indigo-500" />
+              <StatCard label="Events hosted" value={stats?.eventsHosted} accent="border-l-violet-500" />
               <StatCard label="Upcoming events" value={stats?.upcomingEvents} accent="border-l-emerald-500" />
               <StatCard
                 label="Total registrations"
@@ -157,17 +169,18 @@ function DashBoard() {
               />
             </div>
 
-            <section className="mt-12">
-              <h2 className="text-xl font-bold text-slate-900">
+            {/* ── Hosted Events ── */}
+            <section className="mt-14">
+              <h2 className="font-display text-xl font-bold text-white">
                 My hosted events
-                <span className="ml-2 text-base font-normal text-slate-500">
+                <span className="ml-2 text-base font-normal text-zinc-500">
                   ({hostedEvents.length})
                 </span>
               </h2>
 
               {hostedEvents.length === 0 ? (
-                <div className="mt-6 rounded-xl border border-slate-200 bg-white p-8 text-center">
-                  <p className="text-slate-600">You haven&apos;t created any events yet.</p>
+                <div className="mt-6 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-10 text-center">
+                  <p className="text-zinc-400">You haven&apos;t created any events yet.</p>
                   <Link
                     to="/events/create"
                     className={`mt-4 inline-block ${btnPrimary}`}
@@ -180,15 +193,15 @@ function DashBoard() {
                   {hostedEvents.map((event) => (
                     <li
                       key={event._id}
-                      className="rounded-xl border border-slate-200 bg-white p-5"
+                      className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5 hover:border-zinc-700 transition-colors"
                     >
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-semibold text-slate-900">
+                        <h3 className="font-display font-semibold text-white">
                           {event.title}
                         </h3>
                         <StatusBadge status={event.status} />
                       </div>
-                      <p className="mt-1 text-sm text-slate-600">
+                      <p className="mt-1 text-sm text-zinc-500">
                         {formatEventDate(event.date)} · {event.category} ·{" "}
                         {event.eventType}
                       </p>
@@ -207,7 +220,7 @@ function DashBoard() {
                             disabled={isActionLoading(`publish_${event._id}`)}
                             onClick={() => withLoading(`publish_${event._id}`, () => publishEvent(event._id))}
                           >
-                            {isActionLoading(`publish_${event._id}`) && <svg className="mr-2 h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>}
+                            {isActionLoading(`publish_${event._id}`) && spinner}
                             {isActionLoading(`publish_${event._id}`) ? "Publishing…" : "Publish"}
                           </button>
                         )}
@@ -235,7 +248,7 @@ function DashBoard() {
                             disabled={isActionLoading(`close_${event._id}`)}
                             onClick={() => withLoading(`close_${event._id}`, () => closeRegistrations(event._id))}
                           >
-                            {isActionLoading(`close_${event._id}`) && <svg className="mr-2 h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>}
+                            {isActionLoading(`close_${event._id}`) && spinner}
                             {isActionLoading(`close_${event._id}`) ? "Closing…" : "Close registrations"}
                           </button>
                         )}
@@ -245,7 +258,7 @@ function DashBoard() {
                           disabled={isActionLoading(`delete_${event._id}`)}
                           onClick={() => withLoading(`delete_${event._id}`, () => deleteEvent(event._id))}
                         >
-                          {isActionLoading(`delete_${event._id}`) && <svg className="mr-2 h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>}
+                          {isActionLoading(`delete_${event._id}`) && spinner}
                           {isActionLoading(`delete_${event._id}`) ? "Deleting…" : "Delete"}
                         </button>
                       </div>
@@ -255,17 +268,18 @@ function DashBoard() {
               )}
             </section>
 
-            <section className="mt-12">
-              <h2 className="text-xl font-bold text-slate-900">
+            {/* ── My Registrations ── */}
+            <section className="mt-14">
+              <h2 className="font-display text-xl font-bold text-white">
                 My registrations
-                <span className="ml-2 text-base font-normal text-slate-500">
+                <span className="ml-2 text-base font-normal text-zinc-500">
                   ({myRegistrations.length})
                 </span>
               </h2>
 
               {myRegistrations.length === 0 ? (
-                <div className="mt-6 rounded-xl border border-slate-200 bg-white p-8 text-center">
-                  <p className="text-slate-600">
+                <div className="mt-6 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-10 text-center">
+                  <p className="text-zinc-400">
                     You haven&apos;t registered for any events yet.
                   </p>
                   <Link
@@ -280,24 +294,24 @@ function DashBoard() {
                   {myRegistrations.map((r) => (
                     <li
                       key={r._id}
-                      className="rounded-xl border border-slate-200 bg-white p-5"
+                      className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5 hover:border-zinc-700 transition-colors"
                     >
                       <div className="flex flex-wrap items-center gap-2">
                         {r.event?.slug ? (
                           <Link
                             to={`/event/${r.event.slug}`}
-                            className="font-semibold text-slate-900 hover:underline"
+                            className="font-display font-semibold text-white hover:text-violet-300 transition-colors"
                           >
                             {r.event.title}
                           </Link>
                         ) : (
-                          <span className="font-semibold text-slate-900">
+                          <span className="font-display font-semibold text-zinc-500">
                             Event unavailable
                           </span>
                         )}
                         <StatusBadge status={r.status} />
                       </div>
-                      <p className="mt-1 text-sm text-slate-600">{r.name}</p>
+                      <p className="mt-1 text-sm text-zinc-500">{r.name}</p>
                       <div className="mt-4 flex flex-wrap gap-2">
                         {r.status === "approved" && r.ticketToken && (
                           <button
@@ -319,7 +333,7 @@ function DashBoard() {
                               withLoading(`cancel_${r._id}`, () => cancelRegistration(r._id, r.email))
                             }
                           >
-                            {isActionLoading(`cancel_${r._id}`) && <svg className="mr-2 h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>}
+                            {isActionLoading(`cancel_${r._id}`) && spinner}
                             {isActionLoading(`cancel_${r._id}`) ? "Cancelling…" : "Cancel registration"}
                           </button>
                         )}

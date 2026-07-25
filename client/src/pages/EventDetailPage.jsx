@@ -18,11 +18,11 @@ function formatEventDate(date) {
 function DetailRow({ label, value }) {
   if (!value) return null;
   return (
-    <div className="flex flex-col gap-0.5 border-b border-neutral-100 py-3 sm:flex-row sm:gap-4">
-      <dt className="w-32 shrink-0 text-sm font-medium text-neutral-500">
+    <div className="flex flex-col gap-0.5 border-b border-zinc-800/60 py-3.5 sm:flex-row sm:gap-4">
+      <dt className="w-32 shrink-0 text-sm font-semibold text-zinc-500">
         {label}
       </dt>
-      <dd className="text-sm text-neutral-900">{value}</dd>
+      <dd className="text-sm text-zinc-200">{value}</dd>
     </div>
   );
 }
@@ -59,24 +59,24 @@ function EventDetailPage() {
   const canRegister = event?.status === "published";
 
   return (
-    <main className="min-h-[calc(100vh-4.5rem)] bg-neutral-50 py-12 md:py-16">
+    <main className="min-h-[calc(100vh-4.5rem)] bg-zinc-950 py-12 md:py-20">
       <div className="mx-auto max-w-6xl px-6">
         <Link
           to="/eventlisting"
-          className="text-sm font-medium text-neutral-600 hover:text-neutral-900"
+          className="text-sm font-medium text-zinc-500 hover:text-violet-400 transition-colors"
         >
           ← All events
         </Link>
 
         {loading && (
-          <p className="mt-8 text-center text-sm text-neutral-500">
-            Loading event…
-          </p>
+          <div className="mt-16 flex justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-700 border-t-violet-500"></div>
+          </div>
         )}
 
         {error && (
           <p
-            className="mt-8 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+            className="mt-8 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400"
             role="alert"
           >
             {error}
@@ -84,48 +84,49 @@ function EventDetailPage() {
         )}
 
         {!loading && !error && !event && (
-          <p className="mt-8 text-neutral-600">Event not found.</p>
+          <p className="mt-8 text-zinc-400">Event not found.</p>
         )}
 
         {!loading && !error && event && (
           <div className="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-3">
+            {/* ── Main Content ── */}
             <div className="lg:col-span-2">
               <EventBanner
-                fallbackClassName="bg-neutral-200"
-                className="h-48 w-full rounded-xl md:h-64"
+                fallbackClassName="bg-gradient-to-br from-violet-600/60 to-indigo-700/60"
+                className="h-48 w-full rounded-2xl md:h-64"
               />
 
-              <span className="mt-6 inline-block rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs font-medium text-neutral-700">
+              <span className="mt-6 inline-block rounded-full bg-zinc-800 px-3 py-1 text-xs font-medium text-zinc-300">
                 {event.category}
               </span>
 
-              <h1 className="mt-3 text-3xl font-bold text-neutral-900 md:text-4xl">
+              <h1 className="mt-4 font-display text-3xl font-bold text-white md:text-4xl">
                 {event.title}
               </h1>
 
               {event.status === "registration_closed" && (
-                <p className="mt-3 text-sm font-medium text-red-700">
+                <p className="mt-3 text-sm font-semibold text-red-400">
                   Registrations closed
                 </p>
               )}
 
               {event.status === "completed" && (
-                <p className="mt-3 text-sm font-medium text-neutral-600">
+                <p className="mt-3 text-sm font-medium text-zinc-500">
                   This event has ended.
                 </p>
               )}
 
               {event.status === "cancelled" && (
-                <p className="mt-3 text-sm font-medium text-red-700">
+                <p className="mt-3 text-sm font-semibold text-red-400">
                   This event was cancelled.
                 </p>
               )}
 
-              <p className="mt-6 whitespace-pre-wrap text-neutral-700 leading-relaxed">
+              <p className="mt-6 whitespace-pre-wrap text-zinc-300 leading-relaxed">
                 {event.description}
               </p>
 
-              <dl className="mt-8 rounded-xl border border-neutral-200 bg-white px-5">
+              <dl className="mt-8 rounded-2xl border border-zinc-800 bg-zinc-900/50 px-5">
                 <DetailRow label="Date" value={formatEventDate(event.date)} />
                 <DetailRow
                   label="Time"
@@ -149,7 +150,7 @@ function EventDetailPage() {
                             href={event.venue.mapLink}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-neutral-900 underline hover:text-neutral-600"
+                            className="text-violet-400 underline hover:text-violet-300 transition-colors"
                           >
                             Open in maps
                           </a>
@@ -169,7 +170,7 @@ function EventDetailPage() {
                             href={event.online.meetingLink}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="break-all text-neutral-900 underline hover:text-neutral-600"
+                            className="break-all text-violet-400 underline hover:text-violet-300 transition-colors"
                           >
                             Join meeting
                           </a>
@@ -181,10 +182,11 @@ function EventDetailPage() {
               </dl>
             </div>
 
+            {/* ── Sidebar ── */}
             <div className="lg:col-span-1">
-              <div className="sticky top-6 space-y-6 rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
+              <div className="sticky top-24 space-y-6 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6 shadow-xl">
                 <div>
-                  <h2 className="font-semibold text-neutral-900">Capacity</h2>
+                  <h2 className="font-display font-semibold text-white">Capacity</h2>
                   <div className="mt-3">
                     <SeatsCounter
                       capacity={event.capacity}
@@ -194,14 +196,14 @@ function EventDetailPage() {
                 </div>
 
                 {canRegister && seatsLeft === 0 && (
-                  <p className="text-sm text-amber-800">
+                  <p className="text-sm text-amber-400">
                     Event is full — you may be added to the waitlist.
                   </p>
                 )}
 
                 {canRegister && (
                   <div>
-                    <h2 className="font-semibold text-neutral-900">
+                    <h2 className="font-display font-semibold text-white">
                       Register for this event
                     </h2>
                     <div className="mt-4">
@@ -211,7 +213,7 @@ function EventDetailPage() {
                 )}
 
                 {event.status === "registration_closed" && (
-                  <p className="text-sm text-neutral-600">
+                  <p className="text-sm text-zinc-500">
                     The host is no longer accepting registrations.
                   </p>
                 )}
