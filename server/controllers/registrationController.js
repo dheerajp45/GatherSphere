@@ -2,7 +2,7 @@ import { Registration } from "../models/registration.js";
 import { Event } from "../models/event.js";
 import { isValidObjectId } from "../utils/isValidObjectId.js";
 import { eventHostValidation } from "../utils/eventHostValidation.js";
-import { sendEmail } from "../utils/email.js";
+import { queueEmail } from "../utils/email.js";
 import {
   registrationReceivedEmail,
   registrationApprovedEmail,
@@ -77,7 +77,7 @@ async function registerForEvent(eventId, data, userId,userMail) {
             { new: true }
         );
         if (updated) {
-            await sendEmail({
+            queueEmail({
                 to: updated.email,
                 ...registrationReceivedEmail({
                     eventTitle: event.title,
@@ -112,7 +112,7 @@ async function registerForEvent(eventId, data, userId,userMail) {
 
     const newRegistration = await Registration.create(registrationData);
     if (newRegistration) {
-        await sendEmail({
+        queueEmail({
             to: registrationData.email,
             ...registrationReceivedEmail({
                 eventTitle: event.title,
@@ -184,7 +184,7 @@ async function cancelRegistration(registrationId, email) {
     }, { new: true });
     if (updated) {
         const event = await Event.findById(registration.event);
-        await sendEmail({
+        queueEmail({
             to: registration.email,
             ...registrationCancelledEmail({ eventTitle: event?.title ?? "the event" }),
         });
@@ -210,7 +210,7 @@ async function closeUnresolvedRegistrations(eventId) {
 
     const eventTitle = event?.title ?? "the event";
     for (const reg of unresolved) {
-        await sendEmail({
+        queueEmail({
             to: reg.email,
             ...registrationsClosedEmail({ eventTitle }),
         });
@@ -253,7 +253,7 @@ async function approveRegistration(registrationId, hostId) {
     );
     
     if (updated) {
-        await sendEmail({
+        queueEmail({
             to: reg.email,
             ...registrationApprovedEmail({
                 eventTitle: event.title,
@@ -293,7 +293,7 @@ async function rejectRegistration(registrationId, hostId) {
         { new: true }
     );
     if (updated) {
-        await sendEmail({
+        queueEmail({
             to: reg.email,
             ...registrationRejectedEmail({ eventTitle: event?.title ?? "the event" }),
         });
@@ -329,7 +329,7 @@ async function promoteFromWaitlist(eventId) {
 
     const updated = await Registration.findByIdAndUpdate(oldest._id, { status: "approved", ...issueTicket() }, { new: true });
     if (updated) {
-        await sendEmail({
+        queueEmail({
             to: oldest.email,
             ...registrationApprovedEmail({
                 eventTitle: event.title,
