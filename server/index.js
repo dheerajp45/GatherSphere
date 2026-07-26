@@ -1,10 +1,12 @@
 import cors from "cors"
+import { PORT, FRONTEND_URL } from "./config/env.js";
+
 import express from "express"
-import { PORT } from "./config/env.js";
 import { connectDB } from "./config/db.js";
 import { verifyEmailTransport } from "./utils/email.js";
 const app = express();
-app.use(cors({origin:"http://localhost:5173"}))
+
+app.use(cors({ origin: FRONTEND_URL }));
 
 import { authRouter } from "./routes/auth.js";
 import { eventRouter} from "./routes/events.js";
